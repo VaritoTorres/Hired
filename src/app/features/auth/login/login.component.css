@@ -1,2 +1,51 @@
-.auth-card{padding:2rem;border:1px solid #eee;border-radius:.5rem;width:320px}
-.auth-card input{display:block;width:100%;margin-bottom:.75rem;padding:.5rem}
+.login-wrapper{
+	/* take the full viewport so the login UI fills the screen */
+	position:fixed;
+	inset:0;
+	width:100vw;
+	height:100vh;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	padding:2rem;
+	background: linear-gradient(180deg, #0b1320 0%, #071020 100%);
+	z-index:9999;
+}
+
+.login-card{
+	width:100%;
+	max-width:560px;
+	background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+	border-radius:14px;
+	padding:2rem;
+	box-shadow: 0 30px 60px rgba(2,6,23,0.6);
+	color:#e6eef8;
+	border: 1px solid rgba(255,255,255,0.04);
+}
+
+.login-header{display:flex;flex-direction:column;gap:0.25rem;margin-bottom:1rem}
+.logo{font-weight:700;color:var(--accent,#7c5cff);font-size:1.2rem}
+.subtitle{color:rgba(230,238,248,0.75);font-size:0.9rem;margin:0}
+
+.login-form{display:flex;flex-direction:column;gap:0.75rem}
+.field{display:flex;flex-direction:column}
+.label{font-size:0.85rem;color:rgba(230,238,248,0.8);margin-bottom:0.35rem}
+.login-form input{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);padding:0.75rem;border-radius:10px;color:inherit;outline:none}
+.login-form input:focus{box-shadow:0 6px 18px rgba(124,92,255,0.12);border-color:var(--accent,#7c5cff)}
+
+.actions{display:flex;justify-content:space-between;align-items:center;font-size:0.9rem;margin-top:0.25rem}
+.remember{color:rgba(230,238,248,0.85)}
+.forgot{color:var(--accent,#7c5cff);text-decoration:none}
+
+.btn-primary{width:100%;margin-top:0.5rem;padding:0.6rem 0;border-radius:10px}
+.social{display:flex;gap:0.6rem;margin-top:0.6rem}
+.alt-btn{flex:1;padding:0.55rem;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.05);color:inherit}
+
+.login-footer{margin-top:0.9rem;text-align:center;color:rgba(230,238,248,0.8)}
+.login-footer a{color:var(--accent,#7c5cff);font-weight:600;text-decoration:none}
+
+/* Validation styling when form has .was-validated */
+.login-form.was-validated input:invalid{border-color:#ff6b6b;box-shadow:0 6px 18px rgba(255,107,107,0.08)}
+.login-form.was-validated input:invalid::placeholder{color:#ffb3b3}
+
+@media (max-width:520px){.login-card{padding:1.25rem;border-radius:12px}}

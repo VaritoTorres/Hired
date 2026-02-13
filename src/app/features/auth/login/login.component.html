@@ -1,10 +1,37 @@
-<div class="auth-card">
-  <h2>Login</h2>
-  <form>
-    <label>Email</label>
-    <input type="email" />
-    <label>Password</label>
-    <input type="password" />
-    <ui-button>Entrar</ui-button>
-  </form>
+<div class="login-wrapper">
+  <div class="login-card" role="main" aria-labelledby="login-heading">
+    <header class="login-header">
+      <div class="logo">Hired</div>
+      <h2 id="login-heading">Bienvenido de nuevo</h2>
+      <p class="subtitle">Accede para continuar con tus simulaciones</p>
+    </header>
+
+    <form class="login-form" (submit)="onSubmit($event)" novalidate>
+      <label class="field">
+        <span class="label">Correo</span>
+        <input name="email" type="email" placeholder="tu@ejemplo.com" required />
+      </label>
+
+      <label class="field">
+        <span class="label">Contraseña</span>
+        <input name="password" type="password" placeholder="••••••••" required minlength="6" />
+      </label>
+
+      <div class="actions">
+        <label class="remember"><input type="checkbox" name="remember" /> Recuérdame</label>
+        <a class="forgot" routerLink="/auth/forgot">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <ui-button type="submit" class="btn-primary">Entrar</ui-button>
+
+      <div class="social">
+        <button type="button" class="alt-btn">Entrar con Google</button>
+        <button type="button" class="alt-btn">Entrar con GitHub</button>
+      </div>
+
+      <footer class="login-footer">
+        ¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a>
+      </footer>
+    </form>
+  </div>
 </div>

@@ -15,7 +15,7 @@ import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const PUBLIC_ROUTES: Routes = [
-  { path: '', component: LandingComponent },
+  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
   {
     path: 'auth',
     component: AuthLayoutComponent,
