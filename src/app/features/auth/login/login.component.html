@@ -1,37 +1,98 @@
 <div class="login-wrapper">
-  <div class="login-card" role="main" aria-labelledby="login-heading">
+  <div class="login-card">
+
+    <!-- ── Header ────────────────────────────────────────────────────────── -->
     <header class="login-header">
-      <div class="logo">Hired</div>
-      <h2 id="login-heading">Bienvenido de nuevo</h2>
-      <p class="subtitle">Accede para continuar con tus simulaciones</p>
+      <div class="logo" aria-label="HIRED">
+        <span class="logo-icon">H</span>
+        <span class="logo-text">HIRED</span>
+      </div>
+      <h1 class="login-title">Bienvenido de nuevo</h1>
+      <p class="login-subtitle">Accede para continuar con tus simulaciones técnicas</p>
     </header>
 
-    <form class="login-form" (submit)="onSubmit($event)" novalidate>
-      <label class="field">
-        <span class="label">Correo</span>
-        <input name="email" type="email" placeholder="tu@ejemplo.com" required />
-      </label>
+    <!-- ── Error banner ──────────────────────────────────────────────────── -->
+    <div *ngIf="errorMessage" class="error-banner" role="alert">
+      <span class="error-icon">⚠</span>
+      {{ errorMessage }}
+    </div>
 
-      <label class="field">
-        <span class="label">Contraseña</span>
-        <input name="password" type="password" placeholder="••••••••" required minlength="6" />
-      </label>
+    <!-- ── Form ──────────────────────────────────────────────────────────── -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
 
-      <div class="actions">
-        <label class="remember"><input type="checkbox" name="remember" /> Recuérdame</label>
-        <a class="forgot" routerLink="/auth/forgot">¿Olvidaste tu contraseña?</a>
+      <!-- Email -->
+      <div class="field-group">
+        <label for="login-email" class="field-label">Correo electrónico</label>
+        <input
+          id="login-email"
+          type="email"
+          formControlName="email"
+          class="field-input"
+          [class.is-invalid]="email.invalid && email.touched"
+          placeholder="tu@ejemplo.com"
+          autocomplete="email"
+          aria-required="true"
+          [attr.aria-describedby]="email.invalid && email.touched ? 'email-error' : null"
+        />
+        <span
+          *ngIf="email.invalid && email.touched"
+          id="email-error"
+          class="field-error"
+          role="alert"
+        >
+          <ng-container *ngIf="email.errors?.['required']">El correo es obligatorio.</ng-container>
+          <ng-container *ngIf="email.errors?.['email']">Introduce un correo válido.</ng-container>
+        </span>
       </div>
 
-      <ui-button type="submit" class="btn-primary">Entrar</ui-button>
-
-      <div class="social">
-        <button type="button" class="alt-btn">Entrar con Google</button>
-        <button type="button" class="alt-btn">Entrar con GitHub</button>
+      <!-- Password -->
+      <div class="field-group">
+        <label for="login-password" class="field-label">Contraseña</label>
+        <input
+          id="login-password"
+          type="password"
+          formControlName="password"
+          class="field-input"
+          [class.is-invalid]="password.invalid && password.touched"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          aria-required="true"
+          [attr.aria-describedby]="password.invalid && password.touched ? 'password-error' : null"
+        />
+        <span
+          *ngIf="password.invalid && password.touched"
+          id="password-error"
+          class="field-error"
+          role="alert"
+        >
+          <ng-container *ngIf="password.errors?.['required']">La contraseña es obligatoria.</ng-container>
+          <ng-container *ngIf="password.errors?.['minlength']">Mínimo 6 caracteres.</ng-container>
+        </span>
       </div>
 
-      <footer class="login-footer">
-        ¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a>
-      </footer>
+      <!-- Forgot link -->
+      <div class="form-utils">
+        <a routerLink="/auth/forgot" class="link-muted">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loading"
+        [attr.aria-busy]="loading"
+      >
+        <span *ngIf="loading" class="spinner" aria-hidden="true"></span>
+        {{ loading ? 'Verificando...' : 'Iniciar sesión' }}
+      </button>
+
     </form>
+
+    <!-- ── Footer ────────────────────────────────────────────────────────── -->
+    <footer class="login-footer">
+      ¿No tienes cuenta?&nbsp;
+      <a routerLink="/auth/register" class="link-accent">Regístrate gratis</a>
+    </footer>
+
   </div>
 </div>

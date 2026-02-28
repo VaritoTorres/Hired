@@ -1,4 +1,8 @@
-import { Component } from '@angular/core';
+/**
+ * @file sidebar.component.ts
+ * @description Lateral navigation menu inside the authenticated shell.
+ */
+import { Component }  from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 

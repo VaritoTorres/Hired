@@ -1,7 +1,50 @@
-<aside class="app-sidebar">
-  <ul>
-    <li><a routerLink="/dashboard">Dashboard</a></li>
-    <li><a routerLink="/exam/create">Create Exam</a></li>
-    <li><a routerLink="/history">History</a></li>
-  </ul>
+<!--
+  Sidebar
+  ───────
+  Left navigation panel inside the authenticated application shell.
+  Uses routerLinkActive to highlight the active route automatically.
+-->
+<aside class="sidebar" role="navigation" aria-label="Navegación principal">
+
+  <nav class="sidebar-nav">
+
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-item"
+    >
+      <span class="nav-icon" aria-hidden="true">⊞</span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <a
+      routerLink="/simulator"
+      routerLinkActive="is-active"
+      class="nav-item"
+    >
+      <span class="nav-icon" aria-hidden="true">▶</span>
+      <span class="nav-label">Simulador</span>
+    </a>
+
+    <a
+      routerLink="/plans"
+      routerLinkActive="is-active"
+      class="nav-item"
+    >
+      <span class="nav-icon" aria-hidden="true">★</span>
+      <span class="nav-label">Planes</span>
+    </a>
+
+    <a
+      routerLink="/admin"
+      routerLinkActive="is-active"
+      class="nav-item nav-item--admin"
+    >
+      <span class="nav-icon" aria-hidden="true">⚙</span>
+      <span class="nav-label">Admin</span>
+    </a>
+
+  </nav>
+
 </aside>

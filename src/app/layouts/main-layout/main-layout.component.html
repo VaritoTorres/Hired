@@ -1,8 +1,24 @@
+<!--
+  Main Layout
+  ───────────
+  Authenticated application shell.
+  Structure:
+    ┌────────────────────────────────┐
+    │           Navbar               │  ← sticky top
+    ├──────────┬─────────────────────┤
+    │ Sidebar  │   router-outlet     │  ← scrollable content
+    └──────────┴─────────────────────┘
+    │           Footer               │
+    └────────────────────────────────┘
+-->
 <app-navbar></app-navbar>
+
 <div class="layout">
   <app-sidebar></app-sidebar>
-  <main class="content">
+
+  <main class="content" id="main-content" role="main" aria-label="Contenido principal">
     <router-outlet></router-outlet>
   </main>
 </div>
+
 <app-footer></app-footer>

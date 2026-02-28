@@ -1,53 +1,86 @@
-import { Routes } from '@angular/router';
-
-import { LandingComponent } from './features/landing/landing.component';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { CreateExamComponent } from './features/exam/create-exam/create-exam.component';
-import { TakeExamComponent } from './features/exam/take-exam/take-exam.component';
-import { ResultsComponent } from './features/exam/results/results.component';
-import { HistoryComponent } from './features/history/history.component';
-import { ProfileComponent } from './features/profile/profile.component';
-
-import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
-import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
-import { AuthGuard } from './core/guards/auth.guard';
-
-export const PUBLIC_ROUTES: Routes = [
-  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
-  {
-    path: 'auth',
-    component: AuthLayoutComponent,
-    children: [
-      { path: 'login', component: LoginComponent },
-      { path: 'register', component: RegisterComponent },
-      { path: '', redirectTo: 'login', pathMatch: 'full' },
-    ],
-  },
-];
-
-export const PRIVATE_ROUTES: Routes = [
-  {
-    path: '',
-    component: MainLayoutComponent,
-    canActivate: [AuthGuard],
-    children: [
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'exam/create', component: CreateExamComponent },
-      { path: 'exam/take/:id', component: TakeExamComponent },
-      { path: 'exam/results/:id', component: ResultsComponent },
-      { path: 'history', component: HistoryComponent },
-      { path: 'profile', component: ProfileComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    ],
-  },
-];
+/**
+ * @file app.routes.ts
+ * @description Root route configuration for HIRED.
+ *
+ * Design decisions
+ * ────────────────
+ * • Every feature is lazy-loaded (loadChildren / loadComponent) to minimise
+ *   the initial bundle and improve Time-to-Interactive.
+ * • Route access is split into two layout contexts:
+ *     /auth  → AuthLayoutComponent   (unauthenticated, centred)
+ *     /      → MainLayoutComponent   (authenticated, nav + sidebar)
+ * • `authGuard` (functional, uses inject()) protects all private routes.
+ * • The root path performs a smart redirect via the RedirectGuard (see below).
+ */
+import { Routes }        from '@angular/router';
+import { authGuard }     from './core/guards/auth.guard';
 
 export const APP_ROUTES: Routes = [
-  ...PUBLIC_ROUTES,
-  ...PRIVATE_ROUTES,
-  { path: '**', redirectTo: '' },
+  // ── Root redirect ────────────────────────────────────────────────────────────
+  // Always redirect bare "/" to dashboard; authGuard will bounce
+  // unauthenticated visitors to /auth/login automatically.
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'dashboard',
+  },
+
+  // ── Auth layout ──────────────────────────────────────────────────────────────
+  {
+    path: 'auth',
+    loadComponent: () =>
+      import('./layouts/auth-layout/auth-layout.component').then(
+        (m) => m.AuthLayoutComponent
+      ),
+    loadChildren: () =>
+      import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+
+  // ── Main layout (authenticated) ──────────────────────────────────────────────
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layouts/main-layout/main-layout.component').then(
+        (m) => m.MainLayoutComponent
+      ),
+    canActivate: [authGuard],
+    children: [
+      // Dashboard
+      {
+        path: 'dashboard',
+        loadChildren: () =>
+          import('./features/dashboard/dashboard.routes').then(
+            (m) => m.DASHBOARD_ROUTES
+          ),
+      },
+
+      // Plans & pricing
+      {
+        path: 'plans',
+        loadChildren: () =>
+          import('./features/plans/plans.routes').then((m) => m.PLANS_ROUTES),
+      },
+
+      // Technical simulator
+      {
+        path: 'simulator',
+        loadChildren: () =>
+          import('./features/simulator/simulator.routes').then(
+            (m) => m.SIMULATOR_ROUTES
+          ),
+      },
+
+      // Admin (additionally guarded at the feature-routes level)
+      {
+        path: 'admin',
+        loadChildren: () =>
+          import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+      },
+    ],
+  },
+
+  // ── Wildcard ─────────────────────────────────────────────────────────────────
+  { path: '**', redirectTo: 'dashboard' },
 ];
 
 export default APP_ROUTES;

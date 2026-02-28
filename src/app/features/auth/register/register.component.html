@@ -1,10 +1,140 @@
-<div class="auth-card">
-  <h2>Register</h2>
-  <form>
-    <label>Name</label>
-    <input />
-    <label>Email</label>
-    <input />
-    <ui-button>Crear cuenta</ui-button>
-  </form>
+<div class="register-wrapper">
+  <div class="register-card">
+
+    <!-- ── Header ──────────────────────────────────────────────────────────── -->
+    <header class="register-header">
+      <div class="logo">
+        <span class="logo-icon">H</span>
+        <span class="logo-text">HIRED</span>
+      </div>
+      <h1 class="register-title">Crea tu cuenta</h1>
+      <p class="register-subtitle">Empieza a practicar entrevistas técnicas hoy</p>
+    </header>
+
+    <!-- ── Success banner ──────────────────────────────────────────────────── -->
+    <div *ngIf="successMessage" class="success-banner" role="status">
+      <span>✓</span> {{ successMessage }}
+    </div>
+
+    <!-- ── Error banner ────────────────────────────────────────────────────── -->
+    <div *ngIf="errorMessage" class="error-banner" role="alert">
+      <span>⚠</span> {{ errorMessage }}
+    </div>
+
+    <!-- ── Form ────────────────────────────────────────────────────────────── -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate *ngIf="!successMessage">
+
+      <!-- Full name -->
+      <div class="field-group">
+        <label for="reg-name" class="field-label">Nombre completo</label>
+        <input
+          id="reg-name"
+          type="text"
+          formControlName="fullName"
+          class="field-input"
+          [class.is-invalid]="fullName.invalid && fullName.touched"
+          placeholder="María García"
+          autocomplete="name"
+        />
+        <span *ngIf="fullName.invalid && fullName.touched" class="field-error">
+          <ng-container *ngIf="fullName.errors?.['required']">El nombre es obligatorio.</ng-container>
+          <ng-container *ngIf="fullName.errors?.['minlength']">Mínimo 2 caracteres.</ng-container>
+        </span>
+      </div>
+
+      <!-- Email -->
+      <div class="field-group">
+        <label for="reg-email" class="field-label">Correo electrónico</label>
+        <input
+          id="reg-email"
+          type="email"
+          formControlName="email"
+          class="field-input"
+          [class.is-invalid]="email.invalid && email.touched"
+          placeholder="tu@ejemplo.com"
+          autocomplete="email"
+        />
+        <span *ngIf="email.invalid && email.touched" class="field-error">
+          <ng-container *ngIf="email.errors?.['required']">El correo es obligatorio.</ng-container>
+          <ng-container *ngIf="email.errors?.['email']">Introduce un correo válido.</ng-container>
+        </span>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label for="reg-password" class="field-label">Contraseña</label>
+        <input
+          id="reg-password"
+          type="password"
+          formControlName="password"
+          class="field-input"
+          [class.is-invalid]="password.invalid && password.touched"
+          placeholder="Mínimo 8 caracteres"
+          autocomplete="new-password"
+        />
+        <span *ngIf="password.invalid && password.touched" class="field-error">
+          <ng-container *ngIf="password.errors?.['required']">La contraseña es obligatoria.</ng-container>
+          <ng-container *ngIf="password.errors?.['minlength']">Mínimo 8 caracteres.</ng-container>
+        </span>
+      </div>
+
+      <!-- Confirm password -->
+      <div class="field-group">
+        <label for="reg-confirm" class="field-label">Confirmar contraseña</label>
+        <input
+          id="reg-confirm"
+          type="password"
+          formControlName="confirmPassword"
+          class="field-input"
+          [class.is-invalid]="(confirmPassword.invalid && confirmPassword.touched) || passwordsMismatch"
+          placeholder="Repite tu contraseña"
+          autocomplete="new-password"
+        />
+        <span *ngIf="confirmPassword.errors?.['required'] && confirmPassword.touched" class="field-error">
+          Confirma tu contraseña.
+        </span>
+        <span *ngIf="passwordsMismatch" class="field-error">
+          Las contraseñas no coinciden.
+        </span>
+      </div>
+
+      <!-- Terms -->
+      <div class="terms-row">
+        <input
+          id="reg-terms"
+          type="checkbox"
+          formControlName="terms"
+          class="terms-checkbox"
+        />
+        <label for="reg-terms" class="terms-label">
+          Acepto los
+          <a href="/terms" target="_blank" class="link-accent">Términos de servicio</a>
+          y la
+          <a href="/privacy" target="_blank" class="link-accent">Política de privacidad</a>
+        </label>
+      </div>
+      <span *ngIf="terms.invalid && terms.touched" class="field-error">
+        Debes aceptar los términos.
+      </span>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loading"
+        [attr.aria-busy]="loading"
+      >
+        <span *ngIf="loading" class="spinner" aria-hidden="true"></span>
+        {{ loading ? 'Creando cuenta...' : 'Crear cuenta gratis' }}
+      </button>
+
+    </form>
+
+    <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+    <footer class="register-footer">
+      ¿Ya tienes cuenta?&nbsp;
+      <a routerLink="/auth/login" class="link-accent">Inicia sesión</a>
+    </footer>
+
+  </div>
 </div>

@@ -1,1 +1,6 @@
-.auth-page{display:flex;align-items:center;justify-content:center;min-height:80vh}
+/* The auth shell itself is transparent — the child form components
+   (login, register) own their own full-viewport backgrounds. */
+.auth-shell {
+  display: block;
+  min-height: 100vh;
+}

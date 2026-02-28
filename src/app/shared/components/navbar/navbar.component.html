@@ -1,9 +1,39 @@
-<nav class="app-navbar">
-  <div class="container">
-    <a routerLink="/" class="brand">HIRED</a>
-    <ul class="nav">
-      <li><a routerLink="/">Home</a></li>
-      <li><a routerLink="/auth/login">Login</a></li>
-    </ul>
+<!--
+  Navbar
+  ──────
+  Top-level navigation bar rendered by MainLayoutComponent.
+  Uses the async pipe to reactively subscribe to the current user.
+-->
+<header class="navbar" role="banner">
+  <div class="navbar-inner">
+
+    <!-- Brand -->
+    <a routerLink="/dashboard" class="navbar-brand" aria-label="HIRED — Inicio">
+      <span class="brand-icon">H</span>
+      <span class="brand-text">HIRED</span>
+    </a>
+
+    <!-- Right side -->
+    <nav class="navbar-actions" aria-label="Acciones de usuario">
+      <ng-container *ngIf="currentUser$ | async as user; else guestTpl">
+        <!-- Avatar + name -->
+        <div class="user-info">
+          <div class="avatar" [attr.aria-label]="'Avatar de ' + user.fullName">
+            {{ user.fullName.charAt(0).toUpperCase() }}
+          </div>
+          <span class="user-name">{{ user.fullName || user.email }}</span>
+        </div>
+
+        <!-- Logout -->
+        <button class="btn-logout" (click)="logout()" type="button" aria-label="Cerrar sesión">
+          Salir
+        </button>
+      </ng-container>
+
+      <ng-template #guestTpl>
+        <a routerLink="/auth/login" class="btn-login">Iniciar sesión</a>
+      </ng-template>
+    </nav>
+
   </div>
-</nav>
+</header>

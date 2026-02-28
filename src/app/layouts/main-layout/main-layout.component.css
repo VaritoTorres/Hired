@@ -1,2 +1,21 @@
-.layout{display:flex;min-height:70vh}
-.content{flex:1;padding:1rem}
+/* ── App shell ─────────────────────────────────────────────────────────────── */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Body row: sidebar + main ───────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Page content ───────────────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #f8fafc;
+}
