@@ -14,6 +14,7 @@
  */
 import { Routes }        from '@angular/router';
 import { authGuard }     from './core/guards/auth.guard';
+import { planGuard }     from './core/guards/plan.guard';
 
 export const APP_ROUTES: Routes = [
   // ── Root redirect ────────────────────────────────────────────────────────────
@@ -67,6 +68,26 @@ export const APP_ROUTES: Routes = [
         loadChildren: () =>
           import('./features/simulator/simulator.routes').then(
             (m) => m.SIMULATOR_ROUTES
+          ),
+      },
+
+      // Certificates — Pro+ only (planGuard enforces plan feature)
+      {
+        path: 'certificates',
+        canActivate: [planGuard('certificates')],
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent // placeholder until CertificatesComponent is built
+          ),
+      },
+
+      // Ranking — Pro+ only (planGuard enforces plan feature)
+      {
+        path: 'ranking',
+        canActivate: [planGuard('ranking')],
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent // placeholder until RankingComponent is built
           ),
       },
 

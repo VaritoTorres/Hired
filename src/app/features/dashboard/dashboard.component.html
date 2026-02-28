@@ -1,34 +1,181 @@
-<div class="dashboard" *ngIf="currentUser$ | async as user">
+<!-- ─── Loading skeleton ───────────────────────────────────────────────────── -->
+<div *ngIf="isLoading" class="loading-state" aria-busy="true" aria-label="Cargando dashboard…">
+  <div class="skeleton skeleton--title"></div>
+  <div class="skeleton skeleton--text"></div>
+  <div class="skeleton-grid">
+    <div class="skeleton skeleton--card" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+</div>
 
-  <!-- Welcome -->
+<!-- ─── Error state ────────────────────────────────────────────────────────── -->
+<div *ngIf="!isLoading && loadError" class="error-state" role="alert">
+  <p>⚠️ {{ loadError }}</p>
+  <button (click)="ngOnInit()" class="btn-retry">Reintentar</button>
+</div>
+
+<!-- ─── Main dashboard ─────────────────────────────────────────────────────── -->
+<ng-container *ngIf="!isLoading && !loadError && (vm$ | async) as vm">
+<div class="dashboard">
+
+  <!-- ── Welcome header ───────────────────────────────────────────────────── -->
   <header class="dash-header">
     <div>
       <h1 class="dash-title">
-        Hola, {{ user.fullName || user.email }} 👋
+        Hola, {{ vm.user.fullName || vm.user.email }} 👋
       </h1>
-      <p class="dash-subtitle">Continúa practicando para conseguir tu próximo trabajo.</p>
+      <p class="dash-subtitle">
+        Plan actual:
+        <span class="plan-badge plan-badge--{{ vm.profile.plan.slug }}">
+          {{ vm.profile.plan.name }}
+        </span>
+        · Continúa practicando para conseguir tu próximo trabajo.
+      </p>
     </div>
   </header>
 
-  <!-- Quick actions -->
-  <div class="quick-grid">
+  <!-- ── Plan usage widget ────────────────────────────────────────────────── -->
+  <section class="usage-section" aria-label="Uso del plan este mes">
+    <div class="usage-header">
+      <h2 class="section-title">Simulaciones este mes</h2>
+      <span class="usage-count">{{ vm.usageLabel }}</span>
+    </div>
 
-    <a routerLink="/simulator" class="quick-card quick-card--primary">
-      <span class="qc-icon">▶</span>
-      <div>
-        <h3 class="qc-title">Iniciar simulación</h3>
-        <p class="qc-desc">Practica con preguntas técnicas en tiempo real.</p>
+    <div class="usage-bar-track" role="progressbar"
+         [attr.aria-valuenow]="vm.usagePercent"
+         aria-valuemin="0" aria-valuemax="100"
+         [attr.aria-label]="vm.usageLabel + ' simulaciones usadas'">
+      <div
+        class="usage-bar-fill"
+        [ngClass]="usageBarClass(vm.usagePercent)"
+        [style.width.%]="vm.usagePercent">
       </div>
-    </a>
+    </div>
 
-    <a routerLink="/plans" class="quick-card">
-      <span class="qc-icon">★</span>
-      <div>
-        <h3 class="qc-title">Ver planes</h3>
-        <p class="qc-desc">Accede a funcionalidades avanzadas actualizando tu plan.</p>
+    <p *ngIf="vm.usagePercent >= 90" class="usage-warning">
+      ⚠️ Estás cerca de tu límite mensual.
+      <a routerLink="/plans" class="link-upgrade">Actualiza tu plan →</a>
+    </p>
+  </section>
+
+  <!-- ── Quick actions ────────────────────────────────────────────────────── -->
+  <section class="section" aria-label="Acciones rápidas">
+    <h2 class="section-title">Acciones rápidas</h2>
+    <div class="quick-grid">
+
+      <a routerLink="/simulator" class="quick-card quick-card--primary">
+        <span class="qc-icon">▶</span>
+        <div>
+          <h3 class="qc-title">Iniciar simulación</h3>
+          <p class="qc-desc">Practica con preguntas técnicas en tiempo real.</p>
+        </div>
+      </a>
+
+      <a routerLink="/history" class="quick-card">
+        <span class="qc-icon">📋</span>
+        <div>
+          <h3 class="qc-title">Historial</h3>
+          <p class="qc-desc">Revisa todos tus intentos anteriores.</p>
+        </div>
+      </a>
+
+      <a routerLink="/profile" class="quick-card">
+        <span class="qc-icon">👤</span>
+        <div>
+          <h3 class="qc-title">Mi perfil</h3>
+          <p class="qc-desc">Actualiza tu información y links.</p>
+        </div>
+      </a>
+
+      <a routerLink="/plans" class="quick-card">
+        <span class="qc-icon">★</span>
+        <div>
+          <h3 class="qc-title">Ver planes</h3>
+          <p class="qc-desc">Accede a funcionalidades avanzadas.</p>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── Recent attempts ──────────────────────────────────────────────────── -->
+  <section class="section" aria-label="Últimos intentos">
+    <h2 class="section-title">Últimos intentos</h2>
+
+    <div *ngIf="vm.recentAttempts.length === 0" class="empty-state">
+      <p>Aún no tienes intentos. ¡Comienza tu primera simulación!</p>
+      <a routerLink="/simulator" class="btn-primary">Ir al simulador →</a>
+    </div>
+
+    <div *ngIf="vm.recentAttempts.length > 0" class="attempts-list">
+      <div
+        *ngFor="let attempt of vm.recentAttempts"
+        class="attempt-row">
+
+        <div class="attempt-info">
+          <span class="attempt-title">{{ attempt.simulation?.title }}</span>
+          <span class="attempt-diff attempt-diff--{{ attempt.simulation?.difficulty }}">
+            {{ attempt.simulation?.difficulty }}
+          </span>
+        </div>
+
+        <div class="attempt-meta">
+          <span
+            class="attempt-score"
+            [class.attempt-score--good]="(attempt.score ?? 0) >= 70"
+            [class.attempt-score--bad]="(attempt.score ?? 0) < 50">
+            {{ formatScore(attempt.score) }}
+          </span>
+          <span class="attempt-status attempt-status--{{ attempt.status }}">
+            {{ attempt.status }}
+          </span>
+          <time class="attempt-date" [attr.datetime]="attempt.created_at">
+            {{ attempt.created_at | date:'dd MMM yyyy' }}
+          </time>
+        </div>
+
       </div>
-    </a>
+    </div>
+  </section>
 
-  </div>
+  <!-- ── Technical scores by technology ──────────────────────────────────── -->
+  <section class="section" aria-label="Puntajes por tecnología">
+    <h2 class="section-title">Puntaje técnico por tecnología</h2>
+
+    <div *ngIf="vm.technicalScores.length === 0" class="empty-state">
+      <p>Completa simulaciones para ver tu puntaje por tecnología.</p>
+    </div>
+
+    <div *ngIf="vm.technicalScores.length > 0" class="scores-grid">
+      <div
+        *ngFor="let score of vm.technicalScores"
+        class="score-card">
+
+        <div class="score-card__header">
+          <img
+            *ngIf="score.technology?.icon_url"
+            [src]="score.technology.icon_url"
+            [alt]="score.technology.name"
+            class="tech-icon"
+            width="24" height="24">
+          <span class="tech-name">{{ score.technology?.name }}</span>
+        </div>
+
+        <div class="score-card__body">
+          <span class="score-avg" [class.score-avg--good]="score.average_score >= 70">
+            {{ score.average_score | number:'1.0-0' }}%
+          </span>
+          <div class="score-bar-track">
+            <div
+              class="score-bar-fill"
+              [style.width.%]="score.average_score">
+            </div>
+          </div>
+          <span class="score-attempts">{{ score.total_attempts }} intento(s)</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
 
 </div>
+</ng-container>

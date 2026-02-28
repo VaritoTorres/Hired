@@ -22,6 +22,7 @@ import {
 
 import { APP_ROUTES }         from './app.routes';
 import { AppHttpInterceptor } from './core/interceptors/http.interceptor';
+import { ErrorInterceptor }   from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,10 +36,17 @@ export const appConfig: ApplicationConfig = {
     // HttpClient with DI-based interceptors (class interceptors require this).
     provideHttpClient(withInterceptorsFromDi()),
 
-    // JWT attachment interceptor — runs on every HTTP request.
+    // JWT attachment interceptor — attaches Bearer token to every request.
     {
       provide:  HTTP_INTERCEPTORS,
       useClass: AppHttpInterceptor,
+      multi:    true,
+    },
+
+    // Global error interceptor — maps HTTP errors to user-friendly toasts.
+    {
+      provide:  HTTP_INTERCEPTORS,
+      useClass: ErrorInterceptor,
       multi:    true,
     },
   ],
