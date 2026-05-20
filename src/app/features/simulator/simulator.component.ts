@@ -1,19 +1,21 @@
 /**
  * @file simulator.component.ts
- * @description Technical simulation engine stub — full implementation in Phase 3.
+ * @description Legacy stub — superseded by the SimulatorConfigComponent wizard.
+ * Kept for reference only; not referenced in any routes.
+ * See: features/simulator/simulator-config/simulator-config.component.ts
  */
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-simulator',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <section class="p-8">
-      <h1 class="text-2xl font-bold text-slate-800">Simulador</h1>
-      <p class="mt-2 text-slate-500">El motor de simulaciones técnicas estará disponible en la próxima versión.</p>
-    </section>
-  `,
+  template: `<ng-container></ng-container>`,
 })
-export class SimulatorComponent {}
+export class SimulatorComponent {
+  constructor(private router: Router) {
+    this.router.navigate(['/simulator']);
+  }
+}

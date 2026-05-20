@@ -1,0 +1,185 @@
+<!-- plans.component.html -->
+<div class="plans-page">
+
+  <!--  Hero  -->
+  <section class="plans-hero">
+    <h1 class="plans-hero__title">Elige tu plan profesional</h1>
+    <p class="plans-hero__subtitle">
+      Accede a simulaciones, certificados verificables e IA adaptativa.
+      Comienza gratis y escala cuando estes listo.
+    </p>
+  </section>
+
+  <!--  Current subscription status  -->
+  @if (!loadingSub() && activeSub()) {
+    <section class="status-card">
+      <div class="status-card__header">
+        <span class="status-card__badge"
+              [style.background]="PLAN_DISPLAY_META[activeSub()!.plan_slug].colorBg"
+              [style.color]="PLAN_DISPLAY_META[activeSub()!.plan_slug].color">
+          {{ activeSub()!.plan_name }}
+        </span>
+        <span class="status-card__status">{{ activeSub()!.status | titlecase }}</span>
+      </div>
+
+      <div class="status-card__quota">
+        @if (activeSub()!.simulations_per_month !== null) {
+          <p class="status-card__quota-text">
+            Simulaciones este mes:
+            <strong>{{ activeSub()!.simulations_used_this_month }}</strong>
+            de
+            <strong>{{ activeSub()!.simulations_per_month }}</strong>
+            &nbsp;
+            @if (remaining() !== null) {
+              <span>({{ remaining() }} restantes)</span>
+            }
+          </p>
+          <div class="quota-bar">
+            <div class="quota-bar__fill"
+                 [style.width.%]="usagePct()"
+                 [class.quota-bar__fill--warning]="usagePct() >= 75"
+                 [class.quota-bar__fill--danger]="usagePct() >= 100">
+            </div>
+          </div>
+        } @else {
+          <p class="status-card__quota-text status-card__quota-text--unlimited">
+            Simulaciones ilimitadas incluidas en tu plan.
+          </p>
+        }
+
+        @if (activeSub()!.expires_at) {
+          <p class="status-card__expiry">
+            Valido hasta: {{ activeSub()!.expires_at | date:'mediumDate' }}
+          </p>
+        }
+      </div>
+    </section>
+  }
+
+  <!--  Plan cards  -->
+  @if (loadingPlans()) {
+    <div class="plans-loading">
+      <div class="spinner"></div>
+      <p>Cargando planes...</p>
+    </div>
+  } @else {
+    <section class="plans-grid">
+      @for (plan of plans(); track plan.id) {
+        <div class="plan-card"
+             [class.plan-card--featured]="plan.is_featured"
+             [class.plan-card--active]="isCurrentPlan(plan.slug)"
+             [style.--plan-color]="PLAN_DISPLAY_META[plan.slug].color"
+             [style.--plan-color-bg]="PLAN_DISPLAY_META[plan.slug].colorBg">
+
+          <!-- Badge -->
+          @if (plan.badge_label) {
+            <div class="plan-card__badge">{{ plan.badge_label }}</div>
+          }
+          @if (isCurrentPlan(plan.slug)) {
+            <div class="plan-card__badge plan-card__badge--active">Plan actual</div>
+          }
+
+          <!-- Header -->
+          <div class="plan-card__header">
+            <h2 class="plan-card__name">{{ plan.name }}</h2>
+            <div class="plan-card__price">{{ formatPrice(plan) }}</div>
+            @if (plan.description) {
+              <p class="plan-card__desc">{{ plan.description }}</p>
+            }
+          </div>
+
+          <!-- Quota highlights -->
+          <ul class="plan-card__highlights">
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+              </svg>
+              {{ formatQuota(plan) }}
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+              </svg>
+              {{ formatTechs(plan) }}
+            </li>
+          </ul>
+
+          <!-- Feature list -->
+          <ul class="plan-card__features">
+            @for (feature of FEATURES; track feature) {
+              <li [class.included]="hasFeature(plan, feature)"
+                  [class.excluded]="!hasFeature(plan, feature)">
+                <span class="feature-icon">{{ hasFeature(plan, feature) ? '' : '' }}</span>
+                {{ FEATURE_LABELS[feature] }}
+              </li>
+            }
+          </ul>
+
+          <!-- CTA -->
+          <button class="plan-card__cta"
+                  [disabled]="isCtaDisabled(plan)"
+                  [class.plan-card__cta--current]="isCurrentPlan(plan.slug)"
+                  [class.plan-card__cta--coming-soon]="PLAN_DISPLAY_META[plan.slug].comingSoon && !isCurrentPlan(plan.slug)"
+                  (click)="requestUpgrade(plan)">
+            {{ getCtaLabel(plan) }}
+          </button>
+        </div>
+      }
+    </section>
+
+    <!--  Feature comparison table  -->
+    @if (plans().length > 0) {
+      <section class="comparison">
+        <h2 class="comparison__title">Comparacion de funciones</h2>
+        <div class="comparison__scroll">
+          <table class="comparison__table">
+            <thead>
+              <tr>
+                <th class="comparison__feature-col">Funcion</th>
+                @for (plan of plans(); track plan.id) {
+                  <th [class.comparison__th--featured]="plan.is_featured"
+                      [style.color]="PLAN_DISPLAY_META[plan.slug].color">
+                    {{ plan.name }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Simulations row -->
+              <tr>
+                <td class="comparison__feature-label">Simulaciones / mes</td>
+                @for (plan of plans(); track plan.id) {
+                  <td [class.comparison__td--featured]="plan.is_featured">
+                    {{ formatQuota(plan) }}
+                  </td>
+                }
+              </tr>
+              <!-- Technologies row -->
+              <tr>
+                <td class="comparison__feature-label">Tecnologias</td>
+                @for (plan of plans(); track plan.id) {
+                  <td [class.comparison__td--featured]="plan.is_featured">
+                    {{ formatTechs(plan) }}
+                  </td>
+                }
+              </tr>
+              <!-- Feature rows -->
+              @for (feature of FEATURES; track feature) {
+                <tr>
+                  <td class="comparison__feature-label">{{ FEATURE_LABELS[feature] }}</td>
+                  @for (plan of plans(); track plan.id) {
+                    <td [class.comparison__td--featured]="plan.is_featured"
+                        [class.comparison__td--yes]="hasFeature(plan, feature)"
+                        [class.comparison__td--no]="!hasFeature(plan, feature)">
+                      {{ hasFeature(plan, feature) ? '' : '' }}
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  }
+</div>

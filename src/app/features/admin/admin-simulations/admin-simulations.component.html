@@ -1,0 +1,78 @@
+<!-- Admin Simulations -->
+<section class="atable">
+
+  <header class="atable__header">
+    <h1 class="atable__title">Simulaciones</h1>
+    <p class="atable__subtitle">Edita o elimina simulaciones de la plataforma.</p>
+  </header>
+
+  <div *ngIf="loading()" class="atable__loading">Cargando…</div>
+
+  <div *ngIf="successMsg()" class="atable__success">✅ {{ successMsg() }}</div>
+  <div *ngIf="errorMsg()"   class="atable__error">⚠️ {{ errorMsg() }}</div>
+
+  <table *ngIf="!loading()" class="atable__table">
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Dificultad</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let sim of simulations()">
+
+        <!-- Confirm delete row -->
+        <ng-container *ngIf="confirmDeleteId === sim.id">
+          <td colspan="3" class="atable__confirm-msg">
+            ¿Eliminar <strong>{{ sim.title }}</strong>? Esta acción no se puede deshacer.
+          </td>
+          <td class="atable__actions">
+            <button class="btn btn--sm btn--danger" (click)="executeDelete(sim.id)" [disabled]="saving()">Confirmar</button>
+            <button class="btn btn--sm btn--outline" (click)="cancelDelete()">Cancelar</button>
+          </td>
+        </ng-container>
+
+        <!-- View row -->
+        <ng-container *ngIf="editingId !== sim.id && confirmDeleteId !== sim.id">
+          <td class="atable__name">{{ sim.title }}</td>
+          <td>{{ sim.level ?? '—' }}</td>
+          <td>
+            <span class="badge" [class.badge--active]="sim.is_active" [class.badge--inactive]="!sim.is_active">
+              {{ sim.is_active ? 'Activa' : 'Inactiva' }}
+            </span>
+          </td>
+          <td class="atable__actions">
+            <button class="btn btn--sm btn--outline" (click)="startEdit(sim)">Editar</button>
+            <button class="btn btn--sm btn--danger" (click)="confirmDelete(sim.id)">Eliminar</button>
+          </td>
+        </ng-container>
+
+        <!-- Edit row -->
+        <ng-container *ngIf="editingId === sim.id">
+          <td><input class="atable__input" [(ngModel)]="editDrafts[sim.id]['title']" /></td>
+          <td>
+            <select class="atable__input" [(ngModel)]="editDrafts[sim.id]['level']">
+              <option value="easy">Fácil</option>
+              <option value="medium">Medio</option>
+              <option value="hard">Difícil</option>
+            </select>
+          </td>
+          <td>
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="editDrafts[sim.id]['is_active']" />
+              Activa
+            </label>
+          </td>
+          <td class="atable__actions">
+            <button class="btn btn--sm btn--primary" (click)="saveEdit(sim.id)" [disabled]="saving()">Guardar</button>
+            <button class="btn btn--sm btn--outline" (click)="cancelEdit()">Cancelar</button>
+          </td>
+        </ng-container>
+
+      </tr>
+    </tbody>
+  </table>
+
+</section>

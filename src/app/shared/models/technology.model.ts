@@ -19,11 +19,11 @@ export interface Technology {
   /** Human-readable name, e.g. "TypeScript" */
   name: string;
 
-  /** URL-safe slug, e.g. "typescript" */
-  slug: string;
+  /** URL-safe slug, e.g. "typescript" (optional — not a column in the current DB schema) */
+  slug?: string;
 
-  /** Public CDN URL for the technology logo (nullable) */
-  icon_url: string | null;
+  /** Public CDN URL for the technology logo (optional — not a column in the current DB schema) */
+  icon_url?: string | null;
 
   /** Broad grouping, e.g. "frontend" | "backend" | "devops" */
   category: string;

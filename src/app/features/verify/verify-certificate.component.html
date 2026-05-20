@@ -1,0 +1,113 @@
+<!-- /verify/:code — Public Certificate Verification -->
+<div class="verify-page">
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="verify-loading">
+    <div class="verify-spinner"></div>
+    <p>Verificando certificado…</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && errorMsg()" class="verify-error">
+    <span class="verify-error__icon">⚠️</span>
+    <p>{{ errorMsg() }}</p>
+  </div>
+
+  <!-- Not found -->
+  <div *ngIf="!loading() && notFound()" class="verify-not-found">
+    <span class="verify-not-found__icon">🔍</span>
+    <h2>Certificado no encontrado</h2>
+    <p>El código <strong>{{ code }}</strong> no corresponde a ningún certificado emitido por HIRED.</p>
+  </div>
+
+  <!-- Valid certificate -->
+  <ng-container *ngIf="!loading() && certificate() as cert">
+
+    <!-- Status banner -->
+    <div class="status-banner" [class.status-banner--valid]="!cert.is_revoked" [class.status-banner--revoked]="cert.is_revoked">
+      <span class="status-banner__icon">{{ cert.is_revoked ? '🚫' : '✅' }}</span>
+      <span class="status-banner__text">
+        {{ cert.is_revoked ? 'CERTIFICADO REVOCADO' : 'CERTIFICADO VÁLIDO Y AUTÉNTICO' }}
+      </span>
+    </div>
+
+    <!-- Main certificate card -->
+    <div class="cert-card" [class.cert-card--revoked]="cert.is_revoked">
+
+      <!-- Header -->
+      <div class="cert-card__header">
+        <div class="cert-card__brand">
+          <span class="cert-card__brand-logo">🎓</span>
+          <span class="cert-card__brand-name">HIRED</span>
+        </div>
+        <div class="cert-card__level-badge" [style.background]="levelColor(cert.level_certified)">
+          {{ levelLabel(cert.level_certified) }}
+        </div>
+      </div>
+
+      <!-- Recipient -->
+      <div class="cert-card__recipient">
+        <p class="cert-card__issued-to">Este certificado es otorgado a:</p>
+        <h1 class="cert-card__name">{{ cert.user_full_name }}</h1>
+        <p class="cert-card__tech">
+          por demostrar competencia técnica verificada en
+          <strong>{{ cert.technology_name }}</strong>
+        </p>
+      </div>
+
+      <!-- Metrics grid -->
+      <div class="cert-metrics">
+        <div class="cert-metric">
+          <span class="cert-metric__value">{{ cert.average_score | number:'1.1-1' }}%</span>
+          <span class="cert-metric__label">Score Promedio</span>
+        </div>
+        <div class="cert-metric">
+          <span class="cert-metric__value">{{ cert.consistency_score | number:'1.1-1' }}%</span>
+          <span class="cert-metric__label">Consistencia</span>
+        </div>
+        <div class="cert-metric">
+          <span class="cert-metric__value">{{ cert.reliability_index | number:'1.1-1' }}</span>
+          <span class="cert-metric__label">Reliability Index</span>
+        </div>
+        <div class="cert-metric">
+          <span class="cert-metric__value">{{ cert.attempts_count }}</span>
+          <span class="cert-metric__label">Evaluaciones</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="cert-card__footer">
+        <div class="cert-card__footer-left">
+          <p class="cert-card__date">Emitido el {{ cert.issued_at | date:'longDate' }}</p>
+          <p class="cert-card__code">Código: <code>{{ cert.verification_code }}</code></p>
+        </div>
+        <div class="cert-card__footer-right" *ngIf="!cert.is_revoked">
+          <div class="cert-trust">
+            <span class="cert-trust__icon">🔒</span>
+            <span class="cert-trust__text">Verificado por HIRED Platform</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revocation notice -->
+      <div *ngIf="cert.is_revoked" class="cert-revoked-notice">
+        <strong>Razón de revocación:</strong>
+        {{ cert.revocation_reason ?? 'No especificada' }}
+        <span *ngIf="cert.revoked_at"> · Revocado el {{ cert.revoked_at | date:'mediumDate' }}</span>
+      </div>
+    </div>
+
+    <!-- Reliability explanation -->
+    <div class="reliability-explainer" *ngIf="!cert.is_revoked">
+      <h3 class="reliability-explainer__title">¿Qué significa el Reliability Index?</h3>
+      <p class="reliability-explainer__body">
+        El Reliability Index (<strong>{{ cert.reliability_index | number:'1.1-1' }}/100</strong> —
+        <strong>{{ reliabilityLabel(cert.reliability_index) }}</strong>) combina:
+        la consistencia del candidato (40%), la profundidad evaluada (30%) y
+        el nivel de score alcanzado (30%). Cuanto más alto, más robusto es el desempeño.
+      </p>
+    </div>
+
+  </ng-container>
+
+</div>

@@ -1,0 +1,393 @@
+<!-- ============================================================
+     SIMULATOR CONFIGURATION WIZARD
+     ============================================================ -->
+
+<!-- ── Progress header ──────────────────────────────────────── -->
+<div class="wizard-header">
+  <div class="wizard-title-block">
+    <h1 class="wizard-title">Configurar simulación</h1>
+    <p class="wizard-subtitle">
+      Diseña una entrevista técnica real adaptada a tu vacante objetivo
+    </p>
+  </div>
+
+  <!-- Step tracker -->
+  <nav class="step-track" aria-label="Pasos del configurador">
+    <ng-container *ngFor="let step of [1,2,3,4,5]; let i = index">
+      <button
+        class="step-dot"
+        [class.step-dot--active]="currentStep() === (i + 1)"
+        [class.step-dot--done]="currentStep() > (i + 1)"
+        (click)="goToStep($any(i + 1))"
+        [attr.aria-label]="stepLabels[$any(i + 1)]"
+        [attr.aria-current]="currentStep() === (i + 1) ? 'step' : null"
+      >
+        <span class="step-dot__num" *ngIf="currentStep() <= (i + 1)">{{ i + 1 }}</span>
+        <span class="step-dot__check" *ngIf="currentStep() > (i + 1)">✓</span>
+        <span class="step-dot__label">{{ stepLabels[$any(i + 1)] }}</span>
+      </button>
+      <div class="step-connector" *ngIf="i < 4"
+           [class.step-connector--done]="currentStep() > (i + 1)"></div>
+    </ng-container>
+  </nav>
+
+  <!-- Progress bar -->
+  <div class="wizard-progress" role="progressbar"
+       [attr.aria-valuenow]="progressPercent()"
+       aria-valuemin="0" aria-valuemax="100">
+    <div class="wizard-progress__fill"
+         [style.width.%]="progressPercent()"></div>
+  </div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submitConfig()" class="wizard-body">
+
+  <!-- ============================================================
+       STEP 1 — VACANCY DESCRIPTION
+       ============================================================ -->
+  <section class="wizard-step" *ngIf="currentStep() === 1" aria-label="Paso 1: Descripción de la vacante">
+
+    <div class="step-hero">
+      <span class="step-icon">📋</span>
+      <div>
+        <h2 class="step-title">Describe la vacante</h2>
+        <p class="step-desc">
+          Pega la descripción completa del puesto. La IA analizará las tecnologías,
+          el nivel requerido y el contexto para personalizar tu examen.
+        </p>
+      </div>
+    </div>
+
+    <div class="field-block">
+      <label class="field-label" for="vacancy_description">
+        Descripción del puesto
+        <span class="field-required">*</span>
+      </label>
+
+      <div class="textarea-wrapper">
+        <textarea
+          id="vacancy_description"
+          formControlName="vacancy_description"
+          class="field-textarea"
+          [class.field-textarea--error]="form.get('vacancy_description')?.invalid && form.get('vacancy_description')?.touched"
+          rows="10"
+          placeholder="Pega aquí la descripción completa de la vacante. Incluye requisitos técnicos, responsabilidades y tecnologías requeridas. Cuanto más completa, más preciso será el examen...
+
+Ejemplo:
+Buscamos un Senior Frontend Engineer para unirse a nuestro equipo...
+Requisitos:
+- 4+ años de experiencia con React y TypeScript
+- Conocimiento de arquitecturas basadas en componentes
+..."
+        ></textarea>
+        <div class="textarea-meta">
+          <span class="char-count" [class.char-count--ok]="vacancyCharCount() >= 80">
+            {{ vacancyCharCount() }} / 80 caracteres mínimos
+          </span>
+        </div>
+      </div>
+
+      <p class="field-error" *ngIf="form.get('vacancy_description')?.errors?.['minlength'] && form.get('vacancy_description')?.touched">
+        La descripción debe tener al menos 80 caracteres para un análisis preciso.
+      </p>
+    </div>
+
+    <!-- AI analysis preview -->
+    <div class="analysis-card" *ngIf="isAnalyzing()">
+      <div class="analysis-card__loading">
+        <div class="ai-spinner"></div>
+        <div>
+          <p class="ai-loading-title">Analizando vacante con IA…</p>
+          <p class="ai-loading-sub">Detectando tecnologías, nivel y contexto del rol</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="analysis-card analysis-card--done" *ngIf="analysis() && !isAnalyzing()">
+      <div class="analysis-card__header">
+        <span class="analysis-badge">✨ Análisis IA completado</span>
+      </div>
+      <div class="analysis-grid">
+        <div class="analysis-chip">
+          <span class="chip-label">Rol detectado</span>
+          <span class="chip-value">{{ analysis()!.role_type }}</span>
+        </div>
+        <div class="analysis-chip">
+          <span class="chip-label">Nivel estimado</span>
+          <span class="chip-value">{{ levelLabel(analysis()!.estimated_level) }}</span>
+        </div>
+        <div class="analysis-chip">
+          <span class="chip-label">Complejidad técnica</span>
+          <span class="chip-value">{{ analysis()!.complexity_score }} / 10</span>
+        </div>
+        <div class="analysis-chip analysis-chip--wide">
+          <span class="chip-label">Tecnologías detectadas</span>
+          <div class="tech-tags">
+            <span class="tech-tag" *ngFor="let t of analysis()!.detected_technologies">{{ t }}</span>
+          </div>
+        </div>
+        <div class="analysis-chip analysis-chip--wide">
+          <span class="chip-label">Conceptos clave</span>
+          <div class="tech-tags">
+            <span class="tech-tag tech-tag--concept" *ngFor="let c of analysis()!.key_concepts">{{ c }}</span>
+          </div>
+        </div>
+      </div>
+      <p class="analysis-summary">{{ analysis()!.role_summary }}</p>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       STEP 2 — COMPANY TYPE
+       ============================================================ -->
+  <section class="wizard-step" *ngIf="currentStep() === 2" aria-label="Paso 2: Tipo de empresa">
+
+    <div class="step-hero">
+      <span class="step-icon">🏢</span>
+      <div>
+        <h2 class="step-title">Tipo de empresa</h2>
+        <p class="step-desc">
+          El tipo de empresa define el nivel de presión, duración y profundidad técnica esperada.
+        </p>
+      </div>
+    </div>
+
+    <div class="option-grid">
+      <button
+        type="button"
+        class="option-card"
+        *ngFor="let type of companyTypes"
+        [class.option-card--selected]="isSelected('company_type', type)"
+        [style.--accent-color]="COMPANY_TYPE_META[type].color"
+        (click)="selectCompanyType(type)"
+        [attr.aria-pressed]="isSelected('company_type', type)"
+      >
+        <span class="option-card__icon">{{ COMPANY_TYPE_META[type].icon }}</span>
+        <h3 class="option-card__title">{{ COMPANY_TYPE_META[type].label }}</h3>
+        <p class="option-card__desc">{{ COMPANY_TYPE_META[type].description }}</p>
+        <span class="option-card__meta">{{ COMPANY_TYPE_META[type].pressure }}</span>
+        <div class="option-card__check" *ngIf="isSelected('company_type', type)">✓</div>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       STEP 3 — DIFFICULTY MODE
+       ============================================================ -->
+  <section class="wizard-step" *ngIf="currentStep() === 3" aria-label="Paso 3: Nivel de dificultad">
+
+    <div class="step-hero">
+      <span class="step-icon">⚖️</span>
+      <div>
+        <h2 class="step-title">Nivel de dificultad</h2>
+        <p class="step-desc">
+          Elige cómo ajustar la dificultad respecto al nivel estimado de la vacante.
+        </p>
+      </div>
+    </div>
+
+    <!-- Show estimated level if available -->
+    <div class="info-banner" *ngIf="analysis()">
+      <span class="info-banner__icon">🎯</span>
+      <span>Nivel base detectado:
+        <strong>{{ levelLabel(analysis()!.estimated_level) }}</strong>
+        para el rol de <strong>{{ analysis()!.role_type }}</strong>
+      </span>
+    </div>
+
+    <div class="option-list">
+      <button
+        type="button"
+        class="option-row"
+        *ngFor="let mode of difficultyModes"
+        [class.option-row--selected]="isSelected('difficulty_mode', mode)"
+        (click)="selectDifficultyMode(mode)"
+        [attr.aria-pressed]="isSelected('difficulty_mode', mode)"
+      >
+        <span class="option-row__icon">{{ DIFFICULTY_MODE_META[mode].icon }}</span>
+        <div class="option-row__body">
+          <h3 class="option-row__title">{{ DIFFICULTY_MODE_META[mode].label }}</h3>
+          <p class="option-row__desc">{{ DIFFICULTY_MODE_META[mode].description }}</p>
+        </div>
+        <div class="option-row__radio">
+          <div class="radio-dot" [class.radio-dot--selected]="isSelected('difficulty_mode', mode)"></div>
+        </div>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       STEP 4 — EVALUATION TYPE
+       ============================================================ -->
+  <section class="wizard-step" *ngIf="currentStep() === 4" aria-label="Paso 4: Tipo de evaluación">
+
+    <div class="step-hero">
+      <span class="step-icon">📐</span>
+      <div>
+        <h2 class="step-title">Estructura del examen</h2>
+        <p class="step-desc">
+          Define el formato de las preguntas. Afecta la distribución y el método de scoring.
+        </p>
+      </div>
+    </div>
+
+    <div class="option-grid option-grid--2">
+      <button
+        type="button"
+        class="option-card option-card--eval"
+        *ngFor="let type of evaluationTypes"
+        [class.option-card--selected]="isSelected('evaluation_type', type)"
+        (click)="selectEvaluationType(type)"
+        [attr.aria-pressed]="isSelected('evaluation_type', type)"
+      >
+        <span class="option-card__icon">{{ EVALUATION_TYPE_META[type].icon }}</span>
+        <h3 class="option-card__title">{{ EVALUATION_TYPE_META[type].label }}</h3>
+        <p class="option-card__desc">{{ EVALUATION_TYPE_META[type].description }}</p>
+        <div class="option-card__check" *ngIf="isSelected('evaluation_type', type)">✓</div>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       STEP 5 — PRESSURE MODE + REVIEW
+       ============================================================ -->
+  <section class="wizard-step" *ngIf="currentStep() === 5" aria-label="Paso 5: Modo de presión y revisión">
+
+    <div class="step-hero">
+      <span class="step-icon">⏱</span>
+      <div>
+        <h2 class="step-title">Modo de presión</h2>
+        <p class="step-desc">Elige la intensidad de la simulación y revisa la configuración final.</p>
+      </div>
+    </div>
+
+    <!-- Pressure mode selector -->
+    <div class="option-list">
+      <button
+        type="button"
+        class="option-row"
+        *ngFor="let mode of pressureModes"
+        [class.option-row--selected]="isSelected('pressure_mode', mode)"
+        (click)="selectPressureMode(mode)"
+        [attr.aria-pressed]="isSelected('pressure_mode', mode)"
+      >
+        <span class="option-row__icon">{{ PRESSURE_MODE_META[mode].icon }}</span>
+        <div class="option-row__body">
+          <h3 class="option-row__title">{{ PRESSURE_MODE_META[mode].label }}</h3>
+          <p class="option-row__desc">{{ PRESSURE_MODE_META[mode].description }}</p>
+        </div>
+        <div class="option-row__radio">
+          <div class="radio-dot" [class.radio-dot--selected]="isSelected('pressure_mode', mode)"></div>
+        </div>
+      </button>
+    </div>
+
+    <!-- ── Final review card ─────────────────────────────────── -->
+    <div class="review-card">
+      <h3 class="review-card__title">📋 Resumen de configuración</h3>
+
+      <div class="review-grid">
+
+        <div class="review-item" *ngIf="analysis()">
+          <span class="review-item__label">Rol detectado</span>
+          <span class="review-item__value">
+            {{ analysis()!.role_type }} · {{ levelLabel(analysis()!.estimated_level) }}
+          </span>
+        </div>
+
+        <div class="review-item" *ngIf="selectedCompanyMeta">
+          <span class="review-item__label">Empresa</span>
+          <span class="review-item__value">
+            {{ selectedCompanyMeta!.icon }} {{ selectedCompanyMeta!.label }}
+          </span>
+        </div>
+
+        <div class="review-item" *ngIf="selectedDifficultyMeta">
+          <span class="review-item__label">Dificultad</span>
+          <span class="review-item__value">
+            {{ selectedDifficultyMeta!.icon }} {{ selectedDifficultyMeta!.label }}
+          </span>
+        </div>
+
+        <div class="review-item" *ngIf="selectedEvalMeta">
+          <span class="review-item__label">Estructura</span>
+          <span class="review-item__value">
+            {{ selectedEvalMeta!.icon }} {{ selectedEvalMeta!.label }}
+          </span>
+        </div>
+
+        <div class="review-item" *ngIf="selectedPressureMeta">
+          <span class="review-item__label">Modo</span>
+          <span class="review-item__value">
+            {{ selectedPressureMeta!.icon }} {{ selectedPressureMeta!.label }}
+          </span>
+        </div>
+
+        <div class="review-item review-item--highlight">
+          <span class="review-item__label">⏱ Tiempo estimado</span>
+          <span class="review-item__value review-item__value--big">
+            {{ estimatedDuration }} minutos
+          </span>
+        </div>
+
+      </div>
+
+      <p class="review-disclaimer">
+        Una vez iniciado el examen, no podrás modificar la configuración.
+        La estructura se bloquea y el tiempo comienza a correr.
+      </p>
+    </div>
+
+  </section>
+
+</form>
+
+<!-- ── Footer navigation ─────────────────────────────────────── -->
+<div class="wizard-footer">
+  <button
+    type="button"
+    class="btn-secondary"
+    (click)="prev()"
+    [disabled]="currentStep() === 1"
+    aria-label="Paso anterior"
+  >
+    ← Anterior
+  </button>
+
+  <div class="footer-center">
+    <span class="step-indicator">{{ currentStep() }} / {{ TOTAL_STEPS }}</span>
+  </div>
+
+  <!-- Steps 1–4: Next button -->
+  <button
+    type="button"
+    class="btn-primary"
+    *ngIf="currentStep() < TOTAL_STEPS"
+    (click)="next()"
+    [disabled]="!canProceed() || isAnalyzing()"
+  >
+    <span *ngIf="!isAnalyzing()">Continuar →</span>
+    <span *ngIf="isAnalyzing()" class="btn-loading">
+      <span class="btn-spinner"></span> Analizando…
+    </span>
+  </button>
+
+  <!-- Step 5: Start exam button -->
+  <button
+    type="button"
+    class="btn-start"
+    *ngIf="currentStep() === TOTAL_STEPS"
+    (click)="submitConfig()"
+    [disabled]="form.invalid || isSubmitting()"
+    aria-label="Iniciar simulación"
+  >
+    <span *ngIf="!isSubmitting()">🚀 Iniciar simulación</span>
+    <span *ngIf="isSubmitting()" class="btn-loading">
+      <span class="btn-spinner"></span> Generando examen…
+    </span>
+  </button>
+</div>

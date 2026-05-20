@@ -1,0 +1,137 @@
+<!-- Admin Rules: Certification rules + Scoring weights -->
+<section class="arules">
+
+  <header class="arules__header">
+    <h1 class="arules__title">Reglas Académicas</h1>
+    <p class="arules__subtitle">Configura requisitos de certificación y pesos de scoring por tecnología.</p>
+  </header>
+
+  <div *ngIf="loading()" class="arules__loading">Cargando…</div>
+  <div *ngIf="successMsg()" class="arules__success">✅ {{ successMsg() }}</div>
+  <div *ngIf="errorMsg()"   class="arules__error">⚠️ {{ errorMsg() }}</div>
+
+  <!-- ── Certification Rules ─────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading()">
+    <h2 class="arules__section-title">Reglas de Certificación</h2>
+    <table class="arules__table">
+      <thead>
+        <tr>
+          <th>Tecnología</th>
+          <th>Score mín. (%)</th>
+          <th>Intentos mín.</th>
+          <th>Racha requerida</th>
+          <th>XP recompensa</th>
+          <th>Validez (días)</th>
+          <th>Activa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rule of certRules()">
+
+          <!-- View row -->
+          <ng-container *ngIf="editingCertId !== rule.id">
+            <td>{{ rule.technology_name }}</td>
+            <td>{{ rule.min_score_percentage }}</td>
+            <td>{{ rule.min_attempts }}</td>
+            <td>{{ rule.passing_streak_required }}</td>
+            <td>{{ rule.xp_reward }}</td>
+            <td>{{ rule.certificate_validity_days }}</td>
+            <td>
+              <span class="badge" [class.badge--active]="rule.is_active" [class.badge--inactive]="!rule.is_active">
+                {{ rule.is_active ? 'Sí' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn--sm btn--outline" (click)="startEditCert(rule)">Editar</button>
+            </td>
+          </ng-container>
+
+          <!-- Edit row -->
+          <ng-container *ngIf="editingCertId === rule.id">
+            <td>{{ rule.technology_name }}</td>
+            <td><input type="number" class="arules__input" [(ngModel)]="certDrafts[rule.id].min_score_percentage" min="0" max="100" /></td>
+            <td><input type="number" class="arules__input" [(ngModel)]="certDrafts[rule.id].min_attempts" min="1" /></td>
+            <td><input type="number" class="arules__input" [(ngModel)]="certDrafts[rule.id].passing_streak_required" min="0" /></td>
+            <td><input type="number" class="arules__input" [(ngModel)]="certDrafts[rule.id].xp_reward" min="0" /></td>
+            <td><input type="number" class="arules__input" [(ngModel)]="certDrafts[rule.id].certificate_validity_days" min="1" /></td>
+            <td>
+              <input type="checkbox" [(ngModel)]="certDrafts[rule.id].is_active" />
+            </td>
+            <td class="arules__actions">
+              <button class="btn btn--sm btn--primary" (click)="saveCert(rule.id)" [disabled]="saving()">Guardar</button>
+              <button class="btn btn--sm btn--outline" (click)="cancelEditCert()">Cancelar</button>
+            </td>
+          </ng-container>
+
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── Scoring Weights ───────────────────────────────────────────────── -->
+    <h2 class="arules__section-title arules__section-title--spaced">Pesos de Scoring</h2>
+    <p class="arules__hint">Los cuatro pesos deben sumar exactamente 1.000</p>
+    <table class="arules__table">
+      <thead>
+        <tr>
+          <th>Tecnología</th>
+          <th>Conceptos</th>
+          <th>Problem solving</th>
+          <th>Código limpio</th>
+          <th>Performance</th>
+          <th>Suma</th>
+          <th>Activa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cfg of weights()">
+
+          <!-- View row -->
+          <ng-container *ngIf="editingWeightId !== cfg.id">
+            <td>{{ cfg.technology_name }}</td>
+            <td>{{ cfg.weight_concepts | number:'1.4-4' }}</td>
+            <td>{{ cfg.weight_problem_solving | number:'1.4-4' }}</td>
+            <td>{{ cfg.weight_clean_code | number:'1.4-4' }}</td>
+            <td>{{ cfg.weight_performance | number:'1.4-4' }}</td>
+            <td>
+              <span class="sum-ok">{{ (cfg.weight_concepts + cfg.weight_problem_solving + cfg.weight_clean_code + cfg.weight_performance) | number:'1.4-4' }}</span>
+            </td>
+            <td>
+              <span class="badge" [class.badge--active]="cfg.is_active" [class.badge--inactive]="!cfg.is_active">
+                {{ cfg.is_active ? 'Sí' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn--sm btn--outline" (click)="startEditWeight(cfg)">Editar</button>
+            </td>
+          </ng-container>
+
+          <!-- Edit row -->
+          <ng-container *ngIf="editingWeightId === cfg.id">
+            <td>{{ cfg.technology_name }}</td>
+            <td><input type="number" class="arules__input arules__input--narrow" [(ngModel)]="weightDrafts[cfg.id].weight_concepts" step="0.01" min="0" max="1" /></td>
+            <td><input type="number" class="arules__input arules__input--narrow" [(ngModel)]="weightDrafts[cfg.id].weight_problem_solving" step="0.01" min="0" max="1" /></td>
+            <td><input type="number" class="arules__input arules__input--narrow" [(ngModel)]="weightDrafts[cfg.id].weight_clean_code" step="0.01" min="0" max="1" /></td>
+            <td><input type="number" class="arules__input arules__input--narrow" [(ngModel)]="weightDrafts[cfg.id].weight_performance" step="0.01" min="0" max="1" /></td>
+            <td>
+              <span [class.sum-ok]="weightsSum(weightDrafts[cfg.id]) === 1" [class.sum-bad]="weightsSum(weightDrafts[cfg.id]) !== 1">
+                {{ weightsSum(weightDrafts[cfg.id]) | number:'1.4-4' }}
+              </span>
+            </td>
+            <td>
+              <input type="checkbox" [(ngModel)]="weightDrafts[cfg.id].is_active" />
+            </td>
+            <td class="arules__actions">
+              <button class="btn btn--sm btn--primary" (click)="saveWeight(cfg.id)" [disabled]="saving()">Guardar</button>
+              <button class="btn btn--sm btn--outline" (click)="cancelEditWeight()">Cancelar</button>
+            </td>
+          </ng-container>
+
+        </tr>
+      </tbody>
+    </table>
+
+  </ng-container>
+
+</section>

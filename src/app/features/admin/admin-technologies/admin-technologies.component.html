@@ -1,0 +1,48 @@
+<!-- Admin Technologies -->
+<section class="atable">
+
+  <header class="atable__header">
+    <h1 class="atable__title">Tecnologías</h1>
+    <p class="atable__subtitle">Activa, desactiva o edita las tecnologías de la plataforma.</p>
+  </header>
+
+  <div *ngIf="loading()" class="atable__loading">Cargando…</div>
+
+  <div *ngIf="successMsg()" class="atable__success">✅ {{ successMsg() }}</div>
+  <div *ngIf="errorMsg()"   class="atable__error">⚠️ {{ errorMsg() }}</div>
+
+  <table *ngIf="!loading()" class="atable__table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Categoría</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tech of technologies()">
+
+        <!-- View row -->
+        <ng-container *ngIf="editingId !== tech.id">
+          <td class="atable__name">{{ tech.name }}</td>
+          <td class="atable__desc">{{ tech.category ?? '—' }}</td>
+          <td class="atable__actions">
+            <button class="btn btn--sm btn--outline" (click)="startEdit(tech)">Editar</button>
+          </td>
+        </ng-container>
+
+        <!-- Edit row -->
+        <ng-container *ngIf="editingId === tech.id">
+          <td><input class="atable__input" [(ngModel)]="editDrafts[tech.id]['name']" /></td>
+          <td><input class="atable__input" [(ngModel)]="editDrafts[tech.id]['category']" /></td>
+          <td class="atable__actions">
+            <button class="btn btn--sm btn--primary" (click)="saveEdit(tech.id)" [disabled]="saving()">Guardar</button>
+            <button class="btn btn--sm btn--outline" (click)="cancelEdit()">Cancelar</button>
+          </td>
+        </ng-container>
+
+      </tr>
+    </tbody>
+  </table>
+
+</section>

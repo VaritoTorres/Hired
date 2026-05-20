@@ -1,0 +1,87 @@
+<!-- Admin Analytics: Anomaly Detection -->
+<section class="aanalytics">
+
+  <header class="aanalytics__header">
+    <div>
+      <h1 class="aanalytics__title">Detección de Anomalías</h1>
+      <p class="aanalytics__subtitle">Actividad estadísticamente sospechosa en la plataforma.</p>
+    </div>
+    <button class="btn btn--outline" (click)="refresh()" [disabled]="refreshing() || loading()">
+      {{ refreshing() ? 'Actualizando…' : '🔄 Actualizar' }}
+    </button>
+  </header>
+
+  <div *ngIf="loading()" class="aanalytics__loading">Analizando datos…</div>
+  <div *ngIf="!loading() && errorMsg()" class="aanalytics__error">⚠️ {{ errorMsg() }}</div>
+
+  <ng-container *ngIf="!loading() && report() as r">
+
+    <!-- Summary badge -->
+    <div class="anomaly-summary" [class.anomaly-summary--clean]="totalAnomalies(r) === 0">
+      <span *ngIf="totalAnomalies(r) > 0">🚨 {{ totalAnomalies(r) }} anomalía(s) detectada(s)</span>
+      <span *ngIf="totalAnomalies(r) === 0">✅ Sin anomalías detectadas</span>
+    </div>
+
+    <!-- 1. High avg score simulations -->
+    <div class="anomaly-card">
+      <h2 class="anomaly-card__title">Simulaciones con Score Promedio &gt; 95%</h2>
+      <p class="anomaly-card__hint">Puede indicar preguntas demasiado fáciles (≥10 intentos).</p>
+
+      <div *ngIf="r.high_avg_score_simulations.length === 0" class="anomaly-card__empty">Sin anomalías en esta categoría.</div>
+      <table *ngIf="r.high_avg_score_simulations.length > 0" class="anomaly-table">
+        <thead>
+          <tr><th>Simulación</th><th>Score promedio</th><th>Intentos</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of r.high_avg_score_simulations">
+            <td>{{ item.simulation_title }}</td>
+            <td [style.color]="scoreColor(item.avg_score)">{{ item.avg_score | number:'1.1-1' }}%</td>
+            <td>{{ item.total_attempts }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Suspicious perfect streaks -->
+    <div class="anomaly-card">
+      <h2 class="anomaly-card__title">Usuarios con ≥5 Scores Perfectos (30 días)</h2>
+      <p class="anomaly-card__hint">Posible uso indebido o trampa.</p>
+
+      <div *ngIf="r.suspicious_perfect_streaks.length === 0" class="anomaly-card__empty">Sin anomalías en esta categoría.</div>
+      <table *ngIf="r.suspicious_perfect_streaks.length > 0" class="anomaly-table">
+        <thead>
+          <tr><th>Usuario</th><th>Scores perfectos</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of r.suspicious_perfect_streaks">
+            <td>{{ item.full_name }}</td>
+            <td>{{ item.perfect_attempts }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. XP spike users -->
+    <div class="anomaly-card">
+      <h2 class="anomaly-card__title">Usuarios con Spike de XP &gt; 2000 en un Día</h2>
+      <p class="anomaly-card__hint">Crecimiento de XP inusualmente rápido.</p>
+
+      <div *ngIf="r.xp_spike_users.length === 0" class="anomaly-card__empty">Sin anomalías en esta categoría.</div>
+      <table *ngIf="r.xp_spike_users.length > 0" class="anomaly-table">
+        <thead>
+          <tr><th>Usuario</th><th>XP en el día</th><th>Fecha</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of r.xp_spike_users">
+            <td>{{ item.full_name }}</td>
+            <td>{{ item.daily_xp | number }}</td>
+            <td>{{ item.day | date:'shortDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="aanalytics__ts">Generado: {{ r.detected_at | date:'medium' }}</p>
+  </ng-container>
+
+</section>

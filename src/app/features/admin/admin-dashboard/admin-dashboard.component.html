@@ -1,0 +1,79 @@
+<!-- Admin Dashboard: Global Metrics -->
+<section class="adash">
+
+  <header class="adash__header">
+    <h1 class="adash__title">Panel de Métricas</h1>
+    <p class="adash__subtitle">Indicadores globales de la plataforma en tiempo real.</p>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="adash__loading">Cargando métricas…</div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && errorMsg()" class="adash__error">
+    ⚠️ {{ errorMsg() }}
+  </div>
+
+  <!-- Metrics grid -->
+  <ng-container *ngIf="!loading() && metrics() as m">
+
+    <!-- KPI cards -->
+    <div class="adash__kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-card__value">{{ m.total_users | number }}</span>
+        <span class="kpi-card__label">Usuarios totales</span>
+      </div>
+      <div class="kpi-card kpi-card--green">
+        <span class="kpi-card__value">{{ m.active_last_7d | number }}</span>
+        <span class="kpi-card__label">Activos (7 días)</span>
+      </div>
+      <div class="kpi-card kpi-card--blue">
+        <span class="kpi-card__value">{{ m.active_last_30d | number }}</span>
+        <span class="kpi-card__label">Activos (30 días)</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__value">{{ m.total_attempts | number }}</span>
+        <span class="kpi-card__label">Intentos totales</span>
+      </div>
+      <div class="kpi-card kpi-card--gold">
+        <span class="kpi-card__value">{{ m.total_certificates | number }}</span>
+        <span class="kpi-card__label">Certificados válidos</span>
+      </div>
+      <div class="kpi-card kpi-card--purple">
+        <span class="kpi-card__value">{{ m.avg_score_global | number:'1.1-1' }}%</span>
+        <span class="kpi-card__label">Score promedio global</span>
+      </div>
+      <div class="kpi-card kpi-card--green">
+        <span class="kpi-card__value">{{ m.pct_certified | number:'1.1-1' }}%</span>
+        <span class="kpi-card__label">% con certificado</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__value">{{ m.attempts_last_7d | number }}</span>
+        <span class="kpi-card__label">Intentos esta semana</span>
+      </div>
+    </div>
+
+    <!-- Level distribution -->
+    <div class="adash__section" *ngIf="m.level_distribution">
+      <h2 class="adash__section-title">Distribución de Niveles</h2>
+      <div class="level-dist">
+        <div
+          *ngFor="let entry of levelEntries(m.level_distribution)"
+          class="level-dist__row"
+        >
+          <span class="level-dist__level">Nivel {{ entry[0] }}</span>
+          <div class="level-dist__bar-bg">
+            <div
+              class="level-dist__bar-fill"
+              [style.width.%]="(entry[1] / m.total_users) * 100"
+            ></div>
+          </div>
+          <span class="level-dist__count">{{ entry[1] }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="adash__ts">Generado: {{ m.metrics_generated_at | date:'medium' }}</p>
+  </ng-container>
+
+</section>

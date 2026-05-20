@@ -1,0 +1,115 @@
+<!-- /u/:slug — Public Technical Profile -->
+<div class="pprofile-page">
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="pprofile-loading">
+    <div class="pprofile-spinner"></div>
+    <p>Cargando perfil…</p>
+  </div>
+
+  <!-- Not found -->
+  <div *ngIf="!loading() && notFound()" class="pprofile-not-found">
+    <span>🔍</span>
+    <h2>Perfil no encontrado</h2>
+    <p>El slug <strong>{{ slug }}</strong> no corresponde a ningún perfil público de HIRED.</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading() && errorMsg()" class="pprofile-error">
+    ⚠️ {{ errorMsg() }}
+  </div>
+
+  <!-- Profile -->
+  <ng-container *ngIf="!loading() && profile() as p">
+
+    <!-- Hero -->
+    <header class="pprofile-hero">
+      <div class="pprofile-hero__avatar">{{ p.full_name.charAt(0).toUpperCase() }}</div>
+      <div class="pprofile-hero__info">
+        <h1 class="pprofile-hero__name">{{ p.full_name }}</h1>
+        <div class="pprofile-hero__meta">
+          <span class="pprofile-rank">{{ p.global_rank_title }}</span>
+          <span class="pprofile-xp">⚡ {{ p.total_xp | number }} XP</span>
+          <span class="pprofile-active" *ngIf="p.last_active_at">
+            Última actividad: {{ p.last_active_at | date:'mediumDate' }}
+          </span>
+        </div>
+        <p class="pprofile-hero__brand">Perfil técnico verificado por <strong>HIRED</strong></p>
+      </div>
+    </header>
+
+    <!-- Certificates -->
+    <section class="pprofile-section">
+      <h2 class="pprofile-section__title">🎓 Certificaciones Verificadas</h2>
+
+      <div *ngIf="p.certificates.length === 0" class="pprofile-empty">
+        Este perfil aún no tiene certificados válidos.
+      </div>
+
+      <div class="cert-grid" *ngIf="p.certificates.length > 0">
+        <div class="cert-tile" *ngFor="let cert of p.certificates">
+          <div class="cert-tile__header">
+            <span class="cert-tile__icon">{{ cert.technology_icon ?? '💻' }}</span>
+            <div class="cert-tile__badge" [style.background]="certLevelColor(cert.level_certified)">
+              {{ certLevelLabel(cert.level_certified) }}
+            </div>
+          </div>
+          <div class="cert-tile__body">
+            <p class="cert-tile__tech">{{ cert.technology_name }}</p>
+            <div class="cert-tile__metrics">
+              <span class="cert-tile__score">{{ cert.average_score | number:'1.1-1' }}%</span>
+              <span class="cert-tile__label">score</span>
+              <span class="cert-tile__score">{{ cert.reliability_index | number:'1.1-1' }}</span>
+              <span class="cert-tile__label">reliability</span>
+            </div>
+          </div>
+          <div class="cert-tile__footer">
+            <span class="cert-tile__date">{{ cert.issued_at | date:'mediumDate' }}</span>
+            <a class="cert-tile__verify" [routerLink]="['/verify', cert.verification_code]">
+              Verificar →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical scores -->
+    <section class="pprofile-section" *ngIf="p.top_scores.length > 0">
+      <h2 class="pprofile-section__title">📊 Métricas Técnicas</h2>
+
+      <div class="score-list">
+        <div class="score-row" *ngFor="let s of p.top_scores">
+          <div class="score-row__tech">
+            <span class="score-row__name">{{ s.technology_name }}</span>
+            <span class="score-row__level" [style.color]="levelColor(s.level_estimated)">
+              {{ s.level_estimated | titlecase }}
+            </span>
+          </div>
+          <div class="score-row__bars">
+            <div class="score-bar-wrap">
+              <span class="score-bar-label">Score</span>
+              <div class="score-bar-bg">
+                <div class="score-bar-fill score-bar-fill--blue" [style.width.%]="s.average_score"></div>
+              </div>
+              <span class="score-bar-val">{{ s.average_score | number:'1.0-0' }}%</span>
+            </div>
+            <div class="score-bar-wrap">
+              <span class="score-bar-label">Consistencia</span>
+              <div class="score-bar-bg">
+                <div class="score-bar-fill score-bar-fill--green" [style.width.%]="s.consistency_score"></div>
+              </div>
+              <span class="score-bar-val">{{ s.consistency_score | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+          <span class="score-row__attempts">{{ s.total_attempts }} evaluaciones</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pprofile-footer">
+      Perfil generado por <strong>HIRED</strong> — Plataforma de evaluación técnica profesional.
+    </footer>
+
+  </ng-container>
+
+</div>

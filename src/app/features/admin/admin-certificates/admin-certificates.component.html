@@ -1,0 +1,95 @@
+<!-- Admin Certificates — List + Revoke -->
+<section class="acerts">
+
+  <header class="acerts__header">
+    <h1 class="acerts__title">Certificados Emitidos</h1>
+    <p class="acerts__subtitle">Lista completa de certificados. Revoca credenciales comprometidas.</p>
+
+    <label class="toggle-label acerts__toggle">
+      <input type="checkbox" [(ngModel)]="showRevoked" />
+      Mostrar revocados
+    </label>
+  </header>
+
+  <div *ngIf="loading()" class="acerts__loading">Cargando certificados…</div>
+  <div *ngIf="successMsg()" class="acerts__success">✅ {{ successMsg() }}</div>
+  <div *ngIf="errorMsg()"   class="acerts__error">⚠️ {{ errorMsg() }}</div>
+
+  <!-- Revocation modal -->
+  <div *ngIf="revokeTargetId" class="revoke-modal-overlay">
+    <div class="revoke-modal">
+      <h2 class="revoke-modal__title">🚫 Revocar certificado</h2>
+      <p class="revoke-modal__code">{{ revokeTargetCode }}</p>
+      <label class="revoke-modal__label">
+        Motivo de revocación <span class="revoke-modal__optional">(opcional)</span>
+      </label>
+      <textarea
+        class="revoke-modal__textarea"
+        rows="3"
+        [(ngModel)]="revokeReason"
+        placeholder="Ej: Actividad sospechosa detectada…"
+      ></textarea>
+      <div class="revoke-modal__actions">
+        <button class="btn btn--danger" (click)="confirmRevoke()" [disabled]="saving()">
+          {{ saving() ? 'Revocando…' : 'Confirmar revocación' }}
+        </button>
+        <button class="btn btn--outline" (click)="cancelRevoke()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <table *ngIf="!loading()" class="acerts__table">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Tecnología</th>
+        <th>Nivel</th>
+        <th>Score</th>
+        <th>Reliability</th>
+        <th>Código</th>
+        <th>Emitido</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let cert of visibleCerts" [class.acerts__row--revoked]="cert.is_revoked">
+        <td class="acerts__name">{{ cert.user_full_name }}</td>
+        <td>{{ cert.technology_name }}</td>
+        <td>
+          <span class="badge" [class.badge--senior]="cert.level_certified === 'senior'" [class.badge--mid]="cert.level_certified !== 'senior'">
+            {{ levelLabel(cert.level_certified) }}
+          </span>
+        </td>
+        <td>{{ cert.average_score | number:'1.1-1' }}%</td>
+        <td>{{ cert.reliability_index | number:'1.1-1' }}</td>
+        <td class="acerts__code">
+          <code>{{ cert.verification_code }}</code>
+        </td>
+        <td>{{ cert.issued_at | date:'mediumDate' }}</td>
+        <td>
+          <span class="status-badge" [class.status-badge--valid]="!cert.is_revoked" [class.status-badge--revoked]="cert.is_revoked">
+            {{ cert.is_revoked ? 'Revocado' : 'Válido' }}
+          </span>
+        </td>
+        <td>
+          <button
+            *ngIf="!cert.is_revoked"
+            class="btn btn--sm btn--danger"
+            (click)="startRevoke(cert)"
+          >
+            Revocar
+          </button>
+          <span *ngIf="cert.is_revoked" class="acerts__revoke-reason" [title]="cert.revocation_reason ?? ''">
+            {{ cert.revocation_reason ? 'Ver motivo' : '—' }}
+          </span>
+        </td>
+      </tr>
+      <tr *ngIf="visibleCerts.length === 0">
+        <td colspan="9" class="acerts__empty">No hay certificados en esta vista.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</section>

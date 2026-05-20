@@ -3,21 +3,21 @@
  * @description Root route configuration for HIRED.
  *
  * Design decisions
- * ────────────────
- * • Every feature is lazy-loaded (loadChildren / loadComponent) to minimise
+ * ----------------
+ * → Every feature is lazy-loaded (loadChildren / loadComponent) to minimise
  *   the initial bundle and improve Time-to-Interactive.
- * • Route access is split into two layout contexts:
- *     /auth  → AuthLayoutComponent   (unauthenticated, centred)
- *     /      → MainLayoutComponent   (authenticated, nav + sidebar)
- * • `authGuard` (functional, uses inject()) protects all private routes.
- * • The root path performs a smart redirect via the RedirectGuard (see below).
+ * → Route access is split into two layout contexts:
+ *     /auth  ? AuthLayoutComponent   (unauthenticated, centred)
+ *     /      ? MainLayoutComponent   (authenticated, nav + sidebar)
+ * → `authGuard` (functional, uses inject()) protects all private routes.
+ * → The root path performs a smart redirect via the RedirectGuard (see below).
  */
 import { Routes }        from '@angular/router';
 import { authGuard }     from './core/guards/auth.guard';
 import { planGuard }     from './core/guards/plan.guard';
 
 export const APP_ROUTES: Routes = [
-  // ── Root redirect ────────────────────────────────────────────────────────────
+  // -- Root redirect ------------------------------------------------------------
   // Always redirect bare "/" to dashboard; authGuard will bounce
   // unauthenticated visitors to /auth/login automatically.
   {
@@ -26,7 +26,30 @@ export const APP_ROUTES: Routes = [
     redirectTo: 'dashboard',
   },
 
-  // ── Auth layout ──────────────────────────────────────────────────────────────
+  // -- Simulator exam — full-screen (no main layout) -------------------------
+  // Defined BEFORE the main-layout '' route so specific paths are matched first.
+  {
+    path: 'simulator/exam/:attemptId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/simulator/simulator-exam/simulator-exam.component').then(
+        (m) => m.SimulatorExamComponent
+      ),
+    title: 'Examen — HIRED',
+  },
+
+  // -- Simulator results — full-screen (no main layout) ---------------------
+  {
+    path: 'simulator/results/:attemptId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/simulator/simulator-results/simulator-results.component').then(
+        (m) => m.SimulatorResultsComponent
+      ),
+    title: 'Resultados — HIRED',
+  },
+
+  // -- Auth layout --------------------------------------------------------------
   {
     path: 'auth',
     loadComponent: () =>
@@ -37,7 +60,7 @@ export const APP_ROUTES: Routes = [
       import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
 
-  // ── Main layout (authenticated) ──────────────────────────────────────────────
+  // -- Main layout (authenticated) ----------------------------------------------
   {
     path: '',
     loadComponent: () =>
@@ -74,20 +97,19 @@ export const APP_ROUTES: Routes = [
       // Certificates — Pro+ only (planGuard enforces plan feature)
       {
         path: 'certificates',
-        canActivate: [planGuard('certificates')],
+        canActivate: [planGuard('certification_access')],
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent // placeholder until CertificatesComponent is built
           ),
       },
 
-      // Ranking — Pro+ only (planGuard enforces plan feature)
+      // Mapa de Competencias — Adaptive AI diagnostic intelligence
       {
-        path: 'ranking',
-        canActivate: [planGuard('ranking')],
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(
-            (m) => m.DashboardComponent // placeholder until RankingComponent is built
+        path: 'competence-map',
+        loadChildren: () =>
+          import('./features/competence-map/competence-map.routes').then(
+            (m) => m.COMPETENCE_MAP_ROUTES
           ),
       },
 
@@ -100,7 +122,27 @@ export const APP_ROUTES: Routes = [
     ],
   },
 
-  // ── Wildcard ─────────────────────────────────────────────────────────────────
+  // -- Public certificate verification (no auth required) ----------------------
+  {
+    path: 'verify/:code',
+    loadComponent: () =>
+      import('./features/verify/verify-certificate.component').then(
+        (m) => m.VerifyCertificateComponent
+      ),
+    title: 'Verificar Certificado — HIRED',
+  },
+
+  // -- Public technical profile (no auth required) ---------------------------
+  {
+    path: 'u/:slug',
+    loadComponent: () =>
+      import('./features/public-profile/public-profile.component').then(
+        (m) => m.PublicProfileComponent
+      ),
+    title: 'Perfil Técnico — HIRED',
+  },
+
+  // -- Wildcard -----------------------------------------------------------------
   { path: '**', redirectTo: 'dashboard' },
 ];
 

@@ -35,20 +35,17 @@ export interface Simulation {
   /** Display title, e.g. "React Hooks — Mid Level" */
   title: string;
 
-  /** Short description shown on the simulation card */
-  description: string;
-
   /** FK → technologies.id */
   technology_id: string;
 
-  /** Difficulty tier */
-  difficulty: DifficultyLevel;
+  /** Experience level required for this simulation */
+  level: DifficultyLevel;
+
+  /** Schema version of the question set */
+  version?: number | null;
 
   /** Allocated time in minutes */
   duration_minutes: number;
-
-  /** Questions stored as a typed JSON array */
-  questions: SimulationQuestion[];
 
   /** When false the simulation is hidden from candidates */
   is_active: boolean;

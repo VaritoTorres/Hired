@@ -1,0 +1,192 @@
+.acerts {
+  max-width: 1100px;
+}
+
+.acerts__header { margin-bottom: 1.5rem; }
+.acerts__title  { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0 0 0.25rem; }
+.acerts__subtitle { font-size: 0.875rem; color: #64748b; margin: 0 0 0.75rem; }
+.acerts__loading  { color: #64748b; font-size: 0.875rem; }
+.acerts__toggle   { margin-top: 0.25rem; }
+
+.acerts__success {
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.acerts__error {
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+.acerts__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+}
+
+.acerts__table th {
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.acerts__table td {
+  padding: 0.65rem 0.85rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.acerts__table tbody tr:last-child td { border-bottom: none; }
+.acerts__row--revoked td { opacity: 0.5; }
+
+.acerts__name  { font-weight: 600; color: #0f172a; }
+.acerts__code  { font-family: monospace; font-size: 0.75rem; color: #475569; }
+.acerts__empty { text-align: center; padding: 2rem; color: #94a3b8; font-style: italic; }
+.acerts__revoke-reason { color: #94a3b8; font-style: italic; font-size: 0.75rem; }
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge--senior { background: #dcfce7; color: #16a34a; }
+.badge--mid    { background: #ede9fe; color: #6366f1; }
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-badge--valid   { background: #dcfce7; color: #16a34a; }
+.status-badge--revoked { background: #fee2e2; color: #dc2626; }
+
+/* ── Revoke modal ─────────────────────────────────────────────────────────── */
+.revoke-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.revoke-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.revoke-modal__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.revoke-modal__code {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  margin: 0 0 1rem;
+}
+
+.revoke-modal__label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.revoke-modal__optional {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.revoke-modal__textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  resize: vertical;
+  margin-bottom: 1.25rem;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.revoke-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--sm      { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+.btn--danger  { background: #ef4444; color: #ffffff; }
+.btn--danger:hover:not(:disabled) { background: #dc2626; }
+.btn--outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
+.btn--outline:hover:not(:disabled) { background: #f1f5f9; }
+
+/* ── Toggle label ─────────────────────────────────────────────────────────── */
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+}

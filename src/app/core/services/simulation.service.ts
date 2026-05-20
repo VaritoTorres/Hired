@@ -20,7 +20,7 @@
  */
 import { Injectable, inject }         from '@angular/core';
 import { from, Observable, throwError } from 'rxjs';
-import { map, switchMap, catchError, take } from 'rxjs/operators';
+import { map, switchMap, catchError, take, tap } from 'rxjs/operators';
 import { SupabaseService }            from './supabase.service';
 import { AuthService }                from './auth.service';
 import { ProfileService }             from './profile.service';
@@ -80,7 +80,7 @@ export class SimulationService {
         .select(`
           *,
           technology:technologies (
-            id, name, slug, icon_url, category, created_at
+            id, name, category, created_at
           )
         `)
         .eq('is_active', true)
@@ -166,11 +166,15 @@ export class SimulationService {
   }
 
   /**
-   * Submit answers for a completed attempt and mark it as completed.
+   * Submit answers and breakdown scores for a completed attempt.
+   *
+   * Sends `breakdown` to the DB so the server-side trigger
+   * (`trg_score_on_attempt_complete`) can compute `weighted_score`
+   * and update `technical_scores` — all within the same transaction.
    *
    * @param attemptId UUID of the existing in_progress attempt
-   * @param payload   Answers + elapsed duration
-   * @returns Observable<SimulationAttempt> — updated attempt row
+   * @param payload   Answers + ScoreBreakdown + elapsed duration
+   * @returns Observable<SimulationAttempt> — updated row with weighted_score populated
    */
   saveAttempt(
     attemptId: string,
@@ -180,10 +184,10 @@ export class SimulationService {
       this.supabase.client
         .from('simulation_attempts')
         .update({
-          answers:          payload.answers,
-          duration_seconds: payload.duration_seconds,
-          status:           'completed',
-          completed_at:     new Date().toISOString(),
+          answers:      payload.answers,
+          breakdown:    payload.breakdown,   // triggers scoring engine server-side
+          status:       'completed',         // trigger fires on this transition
+          completed_at: new Date().toISOString(),
         })
         .eq('id', attemptId)
         .select()
@@ -193,6 +197,7 @@ export class SimulationService {
         if (error) throw new Error(error.message);
         return data as SimulationAttempt;
       }),
+      tap(() => this.toast.success('Simulación completada', 'Tu puntaje ha sido calculado.')),
       catchError((err) => {
         this.toast.error('Error al guardar intento', err.message);
         return throwError(() => err);
@@ -218,7 +223,7 @@ export class SimulationService {
             .select(`
               *,
               simulation:simulations (
-                id, title, difficulty, technology_id
+                id, title, level, technology_id
               )
             `)
             .eq('user_id', user.id)

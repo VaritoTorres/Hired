@@ -1,0 +1,167 @@
+/* Shared admin table styles — used by technologies & simulations */
+
+.atable {
+  max-width: 1000px;
+}
+
+.atable__header {
+  margin-bottom: 1.5rem;
+}
+
+.atable__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+}
+
+.atable__subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.atable__loading {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.atable__success {
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.atable__error {
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.atable__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.atable__table th {
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.atable__table td {
+  padding: 0.75rem 1rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.atable__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.atable__table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.atable__name { font-weight: 600; color: #0f172a; }
+.atable__desc { color: #64748b; max-width: 280px; }
+
+.atable__input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+.atable__actions {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.atable__confirm-msg {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* ── Badge ────────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge--active   { background: #dcfce7; color: #16a34a; }
+.badge--inactive { background: #f1f5f9; color: #64748b; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--sm { padding: 0.35rem 0.75rem; font-size: 0.8125rem; }
+
+.btn--primary {
+  background: #6366f1;
+  color: #ffffff;
+}
+.btn--primary:hover:not(:disabled) { background: #4f46e5; }
+
+.btn--outline {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+.btn--outline:hover:not(:disabled) { background: #f1f5f9; }
+
+.btn--danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+.btn--danger:hover:not(:disabled) { background: #dc2626; }
+
+/* ── Toggle label ─────────────────────────────────────────────────────────── */
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+}

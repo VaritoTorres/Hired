@@ -1,0 +1,370 @@
+<!-- ============================================================
+     SIMULATOR — PROFESSIONAL DIAGNOSTIC RESULTS
+     ============================================================ -->
+
+<div class="results-page" *ngIf="evaluation()">
+
+  <!-- ── Hero header ─────────────────────────────────────────── -->
+  <header class="results-hero">
+    <div class="results-hero__inner">
+      <div class="hero-left">
+        <p class="hero-eyebrow">Simulación completada</p>
+        <h1 class="hero-title">{{ examTitle() }}</h1>
+        <p class="hero-subtitle" *ngIf="analysis()">
+          {{ analysis()!.role_type }} ·
+          {{ analysis()!.primary_technology }} ·
+          {{ analysis()!.detected_technologies.slice(0,3).join(', ') }}
+        </p>
+      </div>
+
+      <!-- Score ring -->
+      <div class="score-ring-container" [attr.aria-label]="'Puntaje: ' + overallScore()">
+        <svg class="score-ring" viewBox="0 0 110 110" width="110" height="110"
+             role="img" aria-hidden="true">
+          <circle cx="55" cy="55" r="48" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+          <circle cx="55" cy="55" r="48" fill="none"
+                  [attr.stroke]="scoreGrade().color"
+                  stroke-width="7"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="circumference"
+                  [attr.stroke-dashoffset]="strokeDashoffset(overallScore())"
+                  transform="rotate(-90 55 55)"
+                  class="score-circle-fill"/>
+        </svg>
+        <div class="score-ring-inner">
+          <span class="score-value">{{ overallScore() }}</span>
+          <span class="score-max">/100</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Grade badge -->
+    <div class="grade-strip">
+      <span class="grade-badge" [style.background]="scoreGrade().color">
+        {{ scoreGrade().emoji }} {{ scoreGrade().label }}
+      </span>
+      <span class="grade-stat">
+        {{ passedCount() }}/{{ totalQuestions() }} correctas ({{ passRate() }})
+      </span>
+      <span class="grade-stat">
+        Consistencia: {{ evaluation()!.consistency_score | number:'1.0-0' }}/100
+      </span>
+    </div>
+  </header>
+
+  <!-- ── Tab navigation ──────────────────────────────────────── -->
+  <nav class="results-tabs" aria-label="Secciones de resultados">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'overview'"
+            (click)="setTab('overview')">
+      📊 Resumen
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'questions'"
+            (click)="setTab('questions')">
+      🔍 Retroalimentación ({{ questionResults().length }})
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'diagnostic'"
+            (click)="setTab('diagnostic')">
+      🧠 Diagnóstico profesional
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       TAB: OVERVIEW
+       ============================================================ -->
+  <section class="tab-panel" *ngIf="activeTab() === 'overview'" aria-label="Resumen de resultados">
+
+    <!-- Breakdown bars -->
+    <div class="section-card">
+      <h2 class="card-title">Desglose por categoría</h2>
+      <div class="breakdown-list">
+        <div class="breakdown-item" *ngFor="let item of breakdownItems()">
+          <div class="breakdown-item__header">
+            <span class="breakdown-item__icon">{{ item.icon }}</span>
+            <span class="breakdown-item__label">{{ item.label }}</span>
+            <span class="breakdown-item__score" [style.color]="item.color">
+              {{ item.value | number:'1.0-0' }}
+            </span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill"
+                 [style.width]="scoreBarWidth(item.value)"
+                 [style.background]="item.color">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strengths & improvements -->
+    <div class="two-col">
+
+      <div class="section-card section-card--green">
+        <h2 class="card-title card-title--green">💪 Fortalezas detectadas</h2>
+        <ul class="feedback-list" *ngIf="evaluation()!.strengths.length > 0">
+          <li class="feedback-item feedback-item--strength"
+              *ngFor="let s of evaluation()!.strengths">
+            <span class="feedback-icon">✓</span>
+            {{ s }}
+          </li>
+        </ul>
+        <p class="empty-state" *ngIf="evaluation()!.strengths.length === 0">
+          Continúa practicando para consolidar fortalezas.
+        </p>
+      </div>
+
+      <div class="section-card section-card--amber">
+        <h2 class="card-title card-title--amber">🎯 Áreas de mejora</h2>
+        <ul class="feedback-list" *ngIf="evaluation()!.improvement_areas.length > 0">
+          <li class="feedback-item feedback-item--improvement"
+              *ngFor="let area of evaluation()!.improvement_areas">
+            <span class="feedback-icon">→</span>
+            {{ area }}
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Reliability impact -->
+    <div class="section-card impact-card">
+      <div class="impact-inner">
+        <div class="impact-icon" [class.impact-icon--positive]="evaluation()!.reliability_impact >= 0">
+          {{ evaluation()!.reliability_impact >= 0 ? '📈' : '📉' }}
+        </div>
+        <div>
+          <h3 class="impact-title">Impacto en tu perfil técnico</h3>
+          <p class="impact-desc">
+            <span [class.impact-positive]="evaluation()!.reliability_impact >= 0"
+                  [class.impact-negative]="evaluation()!.reliability_impact < 0">
+              {{ evaluation()!.reliability_impact >= 0 ? '+' : '' }}{{ evaluation()!.reliability_impact }}
+              puntos en tu reliability score
+            </span>
+            · Tu puntuación de consistencia es
+            <strong>{{ evaluation()!.consistency_score | number:'1.0-0' }}/100</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       TAB: QUESTIONS FEEDBACK
+       ============================================================ -->
+  <section class="tab-panel" *ngIf="activeTab() === 'questions'" aria-label="Retroalimentación por pregunta">
+
+    <div class="questions-feedback-list">
+
+      <article
+        class="question-feedback-card"
+        *ngFor="let result of questionResults(); let i = index"
+        [class.question-feedback-card--correct]="result.is_correct"
+        [class.question-feedback-card--incorrect]="!result.is_correct"
+      >
+
+        <div class="qf-header" (click)="toggleQuestion(result.question_id)"
+             role="button" tabindex="0"
+             [attr.aria-expanded]="expandedQuestion() === result.question_id"
+             (keydown.enter)="toggleQuestion(result.question_id)">
+
+          <div class="qf-header__left">
+            <span class="qf-num">{{ i + 1 }}</span>
+            <span class="qf-status-icon">
+              {{ result.is_correct ? '✅' : '❌' }}
+            </span>
+            <span class="qf-concept">{{ session()?.exam?.questions?.[i]?.concept ?? 'Concepto' }}</span>
+          </div>
+
+          <div class="qf-header__right">
+            <span class="qf-score" [ngClass]="questionScoreClass(result.question_score)">
+              {{ result.question_score | number:'1.0-0' }}/100
+            </span>
+            <span class="qf-expand-icon">
+              {{ expandedQuestion() === result.question_id ? '▲' : '▼' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Expanded detail -->
+        <div class="qf-detail" *ngIf="expandedQuestion() === result.question_id">
+
+          <!-- Question prompt -->
+          <div class="qf-prompt-block">
+            <p class="qf-prompt-label">Pregunta:</p>
+            <p class="qf-prompt-text">
+              {{ getQuestionAtIndex(i)?.prompt ?? '' }}
+            </p>
+          </div>
+
+          <!-- Your answer -->
+          <div class="qf-answer-block qf-answer-block--yours">
+            <p class="qf-answer-label">Tu respuesta:</p>
+            <p class="qf-answer-text">
+              {{ getAnswerForQuestion(result.question_id) }}
+            </p>
+          </div>
+
+          <!-- Correct answer -->
+          <div class="qf-answer-block qf-answer-block--correct">
+            <p class="qf-answer-label">Respuesta correcta:</p>
+            <p class="qf-answer-text">{{ result.correct_answer }}</p>
+          </div>
+
+          <!-- Feedback -->
+          <div class="qf-feedback-block">
+            <div class="qf-feedback-item">
+              <span class="qf-feedback-icon">💬</span>
+              <div>
+                <p class="qf-feedback-title">Retroalimentación</p>
+                <p class="qf-feedback-body">{{ result.feedback }}</p>
+              </div>
+            </div>
+            <div class="qf-feedback-item">
+              <span class="qf-feedback-icon">⭐</span>
+              <div>
+                <p class="qf-feedback-title">Mejor práctica</p>
+                <p class="qf-feedback-body">{{ result.best_practice }}</p>
+              </div>
+            </div>
+            <div class="qf-feedback-item" *ngIf="result.common_error">
+              <span class="qf-feedback-icon">⚠️</span>
+              <div>
+                <p class="qf-feedback-title">Error común en este concepto</p>
+                <p class="qf-feedback-body">{{ result.common_error }}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       TAB: PROFESSIONAL DIAGNOSTIC
+       ============================================================ -->
+  <section class="tab-panel" *ngIf="activeTab() === 'diagnostic'" aria-label="Diagnóstico profesional">
+
+    <ng-container *ngIf="diagnostic() as diag">
+
+      <!-- Level card -->
+      <div class="section-card diag-level-card">
+        <h2 class="card-title">📊 Nivel técnico estimado</h2>
+        <p class="diag-level-desc">{{ diag.current_level_description }}</p>
+      </div>
+
+      <!-- Key metrics -->
+      <div class="diag-metrics">
+
+        <div class="diag-metric-card diag-metric-card--primary">
+          <div class="diag-metric-card__ring-area">
+            <svg viewBox="0 0 80 80" width="80" height="80" aria-hidden="true">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#334155" stroke-width="6"/>
+              <circle cx="40" cy="40" r="34" fill="none"
+                      stroke="#6366f1" stroke-width="6"
+                      stroke-linecap="round"
+                      [attr.stroke-dasharray]="2 * 3.14159 * 34"
+                      [attr.stroke-dashoffset]="2 * 3.14159 * 34 * (1 - diag.interview_probability)"
+                      transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="ring-label">
+              <span class="ring-value">{{ interviewProbabilityPct() }}%</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="diag-metric-title">Probabilidad de aprobar entrevista real</h3>
+            <p class="diag-metric-desc">
+              Basado en tu desempeño, consistencia y el nivel de la vacante objetivo.
+            </p>
+          </div>
+        </div>
+
+        <div class="diag-metric-card">
+          <span class="diag-metric-emoji">🎯</span>
+          <div>
+            <h3 class="diag-metric-title">Impacto en certificación</h3>
+            <p class="diag-metric-number"
+               [class.diag-metric-number--positive]="diag.certification_impact >= 5">
+              {{ diag.certification_impact >= 0 ? '+' : '' }}{{ diag.certification_impact }} pts
+            </p>
+            <p class="diag-metric-desc">Progreso hacia tu próxima certificación HIRED.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Concepts reinforced / weak -->
+      <div class="two-col">
+
+        <div class="section-card section-card--green">
+          <h2 class="card-title card-title--green">✅ Conceptos reforzados</h2>
+          <div class="concept-chips">
+            <span class="concept-chip concept-chip--reinforced"
+                  *ngFor="let c of diag.concepts_reinforced">
+              {{ c }}
+            </span>
+          </div>
+        </div>
+
+        <div class="section-card section-card--red">
+          <h2 class="card-title card-title--red">📚 Conceptos débiles</h2>
+          <div class="concept-chips">
+            <span class="concept-chip concept-chip--weak"
+                  *ngFor="let c of diag.weak_concepts">
+              {{ c }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Recommended actions -->
+      <div class="section-card">
+        <h2 class="card-title">🚀 Próximos pasos recomendados</h2>
+        <ol class="action-list">
+          <li class="action-item" *ngFor="let action of diag.recommended_actions; let i = index">
+            <span class="action-num">{{ i + 1 }}</span>
+            <span class="action-text">{{ action }}</span>
+          </li>
+        </ol>
+      </div>
+
+    </ng-container>
+
+    <!-- If no diagnostic available -->
+    <div class="empty-diagnostic" *ngIf="!diagnostic()">
+      <p>El diagnóstico profesional no está disponible para esta sesión.</p>
+    </div>
+
+  </section>
+
+  <!-- ── Footer actions ──────────────────────────────────────── -->
+  <footer class="results-footer">
+    <button class="btn-action btn-action--secondary" (click)="goToCompetenceMap()">
+      🗺️ Ver mapa de competencias
+    </button>
+    <button class="btn-action btn-action--secondary" (click)="goToDashboard()">
+      📊 Ir al dashboard
+    </button>
+    <button class="btn-action btn-action--primary" (click)="newSimulation()">
+      🚀 Nueva simulación
+    </button>
+  </footer>
+
+</div>
+
+<!-- ── No data state ─────────────────────────────────────────── -->
+<div class="no-results" *ngIf="!evaluation()">
+  <div class="no-results__box">
+    <span class="no-results__icon">📋</span>
+    <h2>Sin resultados disponibles</h2>
+    <p>Completa una simulación para ver tu diagnóstico profesional.</p>
+    <button class="btn-action btn-action--primary" (click)="newSimulation()">
+      Iniciar simulación
+    </button>
+  </div>
+</div>

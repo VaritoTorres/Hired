@@ -1,5 +1,5 @@
-<!-- ─── Loading skeleton ───────────────────────────────────────────────────── -->
-<div *ngIf="isLoading" class="loading-state" aria-busy="true" aria-label="Cargando dashboard…">
+<!-- --- Loading skeleton ----------------------------------------------------- -->
+<div *ngIf="isLoading" class="loading-state" aria-busy="true" aria-label="Cargando dashboard">
   <div class="skeleton skeleton--title"></div>
   <div class="skeleton skeleton--text"></div>
   <div class="skeleton-grid">
@@ -7,33 +7,117 @@
   </div>
 </div>
 
-<!-- ─── Error state ────────────────────────────────────────────────────────── -->
+<!-- --- Error state ---------------------------------------------------------- -->
 <div *ngIf="!isLoading && loadError" class="error-state" role="alert">
   <p>⚠️ {{ loadError }}</p>
   <button (click)="ngOnInit()" class="btn-retry">Reintentar</button>
 </div>
 
-<!-- ─── Main dashboard ─────────────────────────────────────────────────────── -->
+<!-- --- Main dashboard ------------------------------------------------------- -->
 <ng-container *ngIf="!isLoading && !loadError && (vm$ | async) as vm">
 <div class="dashboard">
 
-  <!-- ── Welcome header ───────────────────────────────────────────────────── -->
+  <!-- --------------------------------------------------------
+       -- HERO HEADER ------------------------------------------
+       -------------------------------------------------------- -->
   <header class="dash-header">
-    <div>
+    <div class="dash-header__left">
       <h1 class="dash-title">
         Hola, {{ vm.user.fullName || vm.user.email }} 👋
       </h1>
       <p class="dash-subtitle">
-        Plan actual:
+        Plan
         <span class="plan-badge plan-badge--{{ vm.profile.plan.slug }}">
           {{ vm.profile.plan.name }}
         </span>
-        · Continúa practicando para conseguir tu próximo trabajo.
+        · Continúa entrenando para dominar las entrevistas técnicas.
       </p>
+    </div>
+
+    <!-- -- Global rank chip -- -->
+    <div class="dash-rank-chip"
+         [style.border-color]="rankColor(vm.profile.global_rank_title)"
+         [style.color]="rankColor(vm.profile.global_rank_title)"
+         aria-label="Tu rango global">
+      <span class="rank-chip__icon">🏆</span>
+      <div>
+        <span class="rank-chip__title">{{ vm.profile.global_rank_title }}</span>
+        <span class="rank-chip__xp">{{ vm.profile.total_xp | number }} XP</span>
+      </div>
     </div>
   </header>
 
-  <!-- ── Plan usage widget ────────────────────────────────────────────────── -->
+  <!-- --------------------------------------------------------
+       -- QUICK STATS STRIP ------------------------------------
+       -------------------------------------------------------- -->
+  <div class="stats-strip" role="list" aria-label="Estadísticas rápidas">
+
+    <div class="stat-chip" role="listitem">
+      <span class="stat-chip__value">{{ vm.profile.total_xp | number }}</span>
+      <span class="stat-chip__label">XP Total</span>
+    </div>
+
+    <div class="stat-chip stat-chip--streak" role="listitem">
+      <span class="stat-chip__value">🔥&nbsp;{{ vm.currentStreak }}</span>
+      <span class="stat-chip__label">Racha actual (días)</span>
+    </div>
+
+    <div class="stat-chip" role="listitem">
+      <span class="stat-chip__value">{{ vm.certificates.length }}</span>
+      <span class="stat-chip__label">Certificados</span>
+    </div>
+
+    <div class="stat-chip" role="listitem">
+      <span class="stat-chip__value">{{ vm.attemptsThisMonth }}</span>
+      <span class="stat-chip__label">Simulaciones este mes</span>
+    </div>
+
+  </div>
+
+  <!-- --------------------------------------------------------
+       -- XP PROGRESS BAR --------------------------------------
+       -------------------------------------------------------- -->
+  <section class="section xp-section" aria-label="Progreso de rango">
+    <div class="xp-header">
+      <div class="xp-rank-info">
+        <span class="xp-rank-label"
+              [style.color]="rankColor(vm.profile.global_rank_title)">
+          {{ vm.profile.global_rank_title }}
+        </span>
+        <span class="xp-rank-desc">
+          {{ rankDescription(vm.profile.global_rank_title) }}
+        </span>
+      </div>
+      <span class="xp-next-label" *ngIf="vm.xpToNextRank > 0">
+        {{ vm.xpToNextRank | number }} XP para el siguiente rango
+      </span>
+      <span class="xp-next-label xp-next-label--top" *ngIf="vm.xpToNextRank === 0">
+        🔓 Rango máximo desbloqueado
+      </span>
+    </div>
+
+    <div class="xp-bar-track" role="progressbar"
+         [attr.aria-valuenow]="xpBarPercent(vm.profile)"
+         aria-valuemin="0" aria-valuemax="100">
+      <div class="xp-bar-fill"
+           [style.width.%]="xpBarPercent(vm.profile)"
+           [style.background]="rankColor(vm.profile.global_rank_title)">
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------
+       -- ADAPTIVE TIP -----------------------------------------
+       -------------------------------------------------------- -->
+  <div *ngIf="vm.adaptiveTip" class="adaptive-tip" role="note" aria-label="Recomendación personalizada">
+    <span class="adaptive-tip__icon">💡</span>
+    <p class="adaptive-tip__text">{{ vm.adaptiveTip }}</p>
+    <a routerLink="/simulator" class="adaptive-tip__cta">Practicar ahora →</a>
+  </div>
+
+  <!-- --------------------------------------------------------
+       -- PLAN USAGE WIDGET ------------------------------------
+       -------------------------------------------------------- -->
   <section class="usage-section" aria-label="Uso del plan este mes">
     <div class="usage-header">
       <h2 class="section-title">Simulaciones este mes</h2>
@@ -57,13 +141,15 @@
     </p>
   </section>
 
-  <!-- ── Quick actions ────────────────────────────────────────────────────── -->
+  <!-- --------------------------------------------------------
+       -- QUICK ACTIONS ----------------------------------------
+       -------------------------------------------------------- -->
   <section class="section" aria-label="Acciones rápidas">
     <h2 class="section-title">Acciones rápidas</h2>
     <div class="quick-grid">
 
       <a routerLink="/simulator" class="quick-card quick-card--primary">
-        <span class="qc-icon">▶</span>
+        <span class="qc-icon">?</span>
         <div>
           <h3 class="qc-title">Iniciar simulación</h3>
           <p class="qc-desc">Practica con preguntas técnicas en tiempo real.</p>
@@ -71,7 +157,7 @@
       </a>
 
       <a routerLink="/history" class="quick-card">
-        <span class="qc-icon">📋</span>
+        <span class="qc-icon">📊</span>
         <div>
           <h3 class="qc-title">Historial</h3>
           <p class="qc-desc">Revisa todos tus intentos anteriores.</p>
@@ -87,7 +173,7 @@
       </a>
 
       <a routerLink="/plans" class="quick-card">
-        <span class="qc-icon">★</span>
+        <span class="qc-icon">?</span>
         <div>
           <h3 class="qc-title">Ver planes</h3>
           <p class="qc-desc">Accede a funcionalidades avanzadas.</p>
@@ -97,33 +183,189 @@
     </div>
   </section>
 
-  <!-- ── Recent attempts ──────────────────────────────────────────────────── -->
-  <section class="section" aria-label="Últimos intentos">
-    <h2 class="section-title">Últimos intentos</h2>
+  <!-- --------------------------------------------------------
+       -- PER-TECHNOLOGY PROGRESS ------------------------------
+       -------------------------------------------------------- -->
+  <section class="section" aria-label="Progreso por tecnología">
+    <h2 class="section-title">Progreso por tecnología</h2>
+
+    <div *ngIf="vm.userProgress.length === 0" class="empty-state">
+      <p>Completa simulaciones para ver tu progreso por tecnología.</p>
+    </div>
+
+    <div *ngIf="vm.userProgress.length > 0" class="progress-grid">
+      <div *ngFor="let prog of vm.userProgress" class="progress-card">
+
+        <div class="progress-card__header">
+          <img
+            *ngIf="prog.technology_icon_url"
+            [src]="prog.technology_icon_url"
+            [alt]="prog.technology_name"
+            class="tech-icon"
+            width="22" height="22">
+          <span class="tech-name">{{ prog.technology_name }}</span>
+          <span class="prog-level-badge prog-level-badge--{{ prog.level_unlocked }}">
+            {{ prog.level_unlocked }}
+          </span>
+        </div>
+
+        <div class="progress-card__xp">
+          <div class="xp-bar-track xp-bar-track--small">
+            <div class="xp-bar-fill xp-bar-fill--tech"
+                 [style.width.%]="(prog.xp_points % 500) / 5">
+            </div>
+          </div>
+          <span class="xp-label">{{ prog.xp_points | number }} XP</span>
+        </div>
+
+        <div class="progress-card__stats">
+          <span class="prog-stat">
+            <strong>{{ prog.best_score | number:'1.0-0' }}%</strong>
+            <span>Mejor</span>
+          </span>
+          <span class="prog-stat">
+            <strong>{{ prog.total_attempts }}</strong>
+            <span>Intentos</span>
+          </span>
+          <span class="prog-stat" [class.prog-stat--active]="prog.streak_days > 1">
+            <strong>🔥 {{ prog.streak_days }}</strong>
+            <span>Racha</span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------
+       -- SCORE EVOLUTION CHART --------------------------------
+       -------------------------------------------------------- -->
+  <section class="section" aria-label="Evolución de puntaje">
+    <h2 class="section-title">Evolución de puntaje</h2>
+
+    <div *ngIf="vm.scoreEvolution.length === 0" class="empty-state">
+      <p>Completa simulaciones para ver tu progreso en el tiempo.</p>
+    </div>
+
+    <div *ngIf="vm.scoreEvolution.length > 0" class="evolution-chart">
+
+      <div class="evo-y-labels">
+        <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+      </div>
+
+      <div class="evo-bars-container">
+        <div class="evo-reference-lines">
+          <div class="evo-ref-line evo-ref-line--85" title="Umbral Senior (85%)"></div>
+          <div class="evo-ref-line evo-ref-line--70" title="Umbral Mid (70%)"></div>
+          <div class="evo-ref-line evo-ref-line--50" title="Umbral Junior (50%)"></div>
+        </div>
+
+        <div
+          *ngFor="let point of vm.scoreEvolution"
+          class="evo-bar-wrap"
+          [title]="point.title + ': ' + point.weighted_score + '%'">
+          <span class="evo-score-label">{{ point.weighted_score | number:'1.0-0' }}</span>
+          <div class="evo-bar"
+               [class.evo-bar--senior]="point.weighted_score >= 85"
+               [class.evo-bar--mid]="point.weighted_score >= 70 && point.weighted_score < 85"
+               [class.evo-bar--junior]="point.weighted_score >= 50 && point.weighted_score < 70"
+               [class.evo-bar--beginner]="point.weighted_score < 50"
+               [style.height.%]="point.weighted_score">
+          </div>
+          <time class="evo-date" [attr.datetime]="point.completed_at">
+            {{ point.completed_at | date:'dd/MM' }}
+          </time>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------
+       -- BREAKDOWN AVERAGES -----------------------------------
+       -------------------------------------------------------- -->
+  <section class="section" *ngIf="vm.scoreEvolution.length > 0" aria-label="Promedios por categoría">
+    <h2 class="section-title">Perfil técnico — promedio de categorías</h2>
+
+    <div class="breakdown-grid">
+
+      <div class="breakdown-item">
+        <div class="breakdown-label">
+          <span>Conceptos</span>
+          <span class="breakdown-value">{{ vm.breakdownAverages.concepts }}%</span>
+        </div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill breakdown-fill--concepts"
+               [style.width.%]="vm.breakdownAverages.concepts"></div>
+        </div>
+        <p class="breakdown-hint">Dominio teórico y fundamentos del lenguaje</p>
+      </div>
+
+      <div class="breakdown-item">
+        <div class="breakdown-label">
+          <span>Resolución de problemas</span>
+          <span class="breakdown-value">{{ vm.breakdownAverages.problem_solving }}%</span>
+        </div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill breakdown-fill--problem"
+               [style.width.%]="vm.breakdownAverages.problem_solving"></div>
+        </div>
+        <p class="breakdown-hint">Calidad del enfoque algorítmico</p>
+      </div>
+
+      <div class="breakdown-item">
+        <div class="breakdown-label">
+          <span>Código limpio</span>
+          <span class="breakdown-value">{{ vm.breakdownAverages.clean_code }}%</span>
+        </div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill breakdown-fill--clean"
+               [style.width.%]="vm.breakdownAverages.clean_code"></div>
+        </div>
+        <p class="breakdown-hint">Legibilidad, estructura y convenciones</p>
+      </div>
+
+      <div class="breakdown-item">
+        <div class="breakdown-label">
+          <span>Performance</span>
+          <span class="breakdown-value">{{ vm.breakdownAverages.performance }}%</span>
+        </div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill breakdown-fill--perf"
+               [style.width.%]="vm.breakdownAverages.performance"></div>
+        </div>
+        <p class="breakdown-hint">Complejidad Big-O y eficiencia de memoria</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------
+       -- RECENT ATTEMPTS --------------------------------------
+       -------------------------------------------------------- -->
+  <section class="section" aria-label="áltimos intentos">
+    <h2 class="section-title">áltimos intentos</h2>
 
     <div *ngIf="vm.recentAttempts.length === 0" class="empty-state">
-      <p>Aún no tienes intentos. ¡Comienza tu primera simulación!</p>
+      <p>Añn no tienes intentos. ¡Comienza tu primera simulación!</p>
       <a routerLink="/simulator" class="btn-primary">Ir al simulador →</a>
     </div>
 
     <div *ngIf="vm.recentAttempts.length > 0" class="attempts-list">
-      <div
-        *ngFor="let attempt of vm.recentAttempts"
-        class="attempt-row">
+      <div *ngFor="let attempt of vm.recentAttempts" class="attempt-row">
 
         <div class="attempt-info">
-          <span class="attempt-title">{{ attempt.simulation?.title }}</span>
-          <span class="attempt-diff attempt-diff--{{ attempt.simulation?.difficulty }}">
-            {{ attempt.simulation?.difficulty }}
+          <span class="attempt-title">{{ attempt.simulation.title }}</span>
+          <span class="attempt-diff attempt-diff--{{ attempt.simulation.level }}">
+            {{ attempt.simulation.level }}
           </span>
         </div>
 
         <div class="attempt-meta">
-          <span
-            class="attempt-score"
-            [class.attempt-score--good]="(attempt.score ?? 0) >= 70"
-            [class.attempt-score--bad]="(attempt.score ?? 0) < 50">
-            {{ formatScore(attempt.score) }}
+          <span class="attempt-score"
+                [class.attempt-score--good]="(attempt.weighted_score ?? attempt.score ?? 0) >= 70"
+                [class.attempt-score--bad]="(attempt.weighted_score ?? attempt.score ?? 0) < 50">
+            {{ formatScore(attempt.weighted_score ?? attempt.score) }}
           </span>
           <span class="attempt-status attempt-status--{{ attempt.status }}">
             {{ attempt.status }}
@@ -137,7 +379,9 @@
     </div>
   </section>
 
-  <!-- ── Technical scores by technology ──────────────────────────────────── -->
+  <!-- --------------------------------------------------------
+       -- TECHNICAL SCORES -------------------------------------
+       -------------------------------------------------------- -->
   <section class="section" aria-label="Puntajes por tecnología">
     <h2 class="section-title">Puntaje técnico por tecnología</h2>
 
@@ -146,34 +390,98 @@
     </div>
 
     <div *ngIf="vm.technicalScores.length > 0" class="scores-grid">
-      <div
-        *ngFor="let score of vm.technicalScores"
-        class="score-card">
+      <div *ngFor="let score of vm.technicalScores" class="score-card">
 
         <div class="score-card__header">
           <img
-            *ngIf="score.technology?.icon_url"
+            *ngIf="score.technology.icon_url"
             [src]="score.technology.icon_url"
             [alt]="score.technology.name"
             class="tech-icon"
             width="24" height="24">
-          <span class="tech-name">{{ score.technology?.name }}</span>
+          <span class="tech-name">{{ score.technology.name }}</span>
+          <span *ngIf="score.level_estimated"
+                class="level-badge"
+                [style.background]="levelColor(score.level_estimated) + '22'"
+                [style.color]="levelColor(score.level_estimated)">
+            {{ levelLabel(score.level_estimated) }}
+          </span>
         </div>
 
         <div class="score-card__body">
           <span class="score-avg" [class.score-avg--good]="score.average_score >= 70">
-            {{ score.average_score | number:'1.0-0' }}%
+            {{ score.average_score | number:'1.0-1' }}%
           </span>
           <div class="score-bar-track">
-            <div
-              class="score-bar-fill"
-              [style.width.%]="score.average_score">
-            </div>
+            <div class="score-bar-fill" [style.width.%]="score.average_score"></div>
           </div>
-          <span class="score-attempts">{{ score.total_attempts }} intento(s)</span>
+          <div class="score-footer">
+            <span class="score-attempts">{{ score.total_attempts }} intento(s)</span>
+            <span *ngIf="score.percentile_rank !== null"
+                  class="score-percentile"
+                  title="Percentil entre todos los usuarios">
+              Top {{ 100 - score.percentile_rank | number:'1.0-0' }}%
+            </span>
+          </div>
+
+          <div *ngIf="score.weakest_area" class="score-weakest">
+            <span>⚠️ Área débil: <strong>{{ score.weakest_area | titlecase }}</strong></span>
+          </div>
         </div>
 
       </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------
+       -- CERTIFICATES GALLERY ---------------------------------
+       -------------------------------------------------------- -->
+  <section class="section" aria-label="Certificados obtenidos">
+    <h2 class="section-title">Certificados</h2>
+
+    <div *ngIf="vm.certificates.length === 0" class="empty-state">
+      <p>
+        Alcanza un promedio = 70% con al menos 3 intentos en una tecnología
+        para desbloquear tu primer certificado.
+      </p>
+    </div>
+
+    <div *ngIf="vm.certificates.length > 0" class="cert-grid">
+      <article *ngFor="let cert of vm.certificates"
+               class="cert-card"
+               [style.border-color]="certColor(cert.level_certified)">
+
+        <div class="cert-card__badge"
+             [style.background]="certColor(cert.level_certified) + '18'"
+             [style.color]="certColor(cert.level_certified)">
+          🏅 {{ certLevelLabel(cert.level_certified) }}
+        </div>
+
+        <div class="cert-card__body">
+          <div class="cert-tech">
+            <img *ngIf="cert.technology.icon_url"
+                 [src]="cert.technology.icon_url"
+                 [alt]="cert.technology.name"
+                 width="18" height="18"
+                 class="tech-icon">
+            <strong>{{ cert.technology.name }}</strong>
+          </div>
+          <time class="cert-date">Emitido {{ cert.issued_at | date:'MMM yyyy' }}</time>
+        </div>
+
+        <div class="cert-card__footer">
+          <span class="cert-code" title="Código de verificación">
+            #{{ cert.verification_code | slice:0:8 }}
+          </span>
+          <a [routerLink]="['/verify', cert.verification_code]"
+             class="cert-verify-link"
+             target="_blank"
+             rel="noopener">
+            Verificar ?
+          </a>
+        </div>
+
+      </article>
     </div>
   </section>
 

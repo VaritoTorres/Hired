@@ -256,3 +256,450 @@
   transition: background 0.15s;
 }
 .btn-retry:hover { background: #dc2626; }
+
+/* ── Score evolution chart ─────────────────────────────────────────────────── */
+.evolution-chart {
+  display: flex;
+  align-items: stretch;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1rem 0.75rem;
+  overflow-x: auto;
+  min-height: 160px;
+}
+
+.evo-y-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 0.5rem 1.75rem 0;
+  flex-shrink: 0;
+  gap: 0;
+}
+.evo-y-labels span {
+  font-size: 0.625rem;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.evo-bars-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.625rem;
+  padding-bottom: 1.75rem;
+  min-width: 0;
+}
+
+/* ── horizontal reference lines ── */
+.evo-reference-lines {
+  position: absolute;
+  inset: 0 0 1.75rem 0;
+  pointer-events: none;
+}
+.evo-ref-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  border-top: 1px dashed #e2e8f0;
+}
+.evo-ref-line--85 { bottom: 85%; }
+.evo-ref-line--70 { bottom: 70%; }
+.evo-ref-line--50 { bottom: 50%; }
+
+/* ── individual bar wrapper ── */
+.evo-bar-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 0 24px;
+  max-width: 44px;
+}
+
+.evo-score-label {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.evo-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 2px;
+}
+.evo-bar--senior   { background: #16a34a; }
+.evo-bar--mid      { background: #6366f1; }
+.evo-bar--junior   { background: #f59e0b; }
+.evo-bar--beginner { background: #94a3b8; }
+
+.evo-date {
+  position: absolute;
+  bottom: -1.5rem;
+  font-size: 0.5625rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ── Breakdown averages ────────────────────────────────────────────────────── */
+.breakdown-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.25rem;
+}
+
+.breakdown-item { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.breakdown-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.breakdown-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.breakdown-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+.breakdown-fill--concepts { background: #6366f1; }
+.breakdown-fill--problem  { background: #f59e0b; }
+.breakdown-fill--clean    { background: #22c55e; }
+.breakdown-fill--perf     { background: #0ea5e9; }
+
+.breakdown-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ── Level badge ───────────────────────────────────────────────────────────── */
+.level-badge {
+  display: inline-block;
+  margin-left: auto;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Score footer ──────────────────────────────────────────────────────────── */
+.score-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.375rem;
+}
+
+.score-percentile {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: #eef2ff;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 5 — GAMIFICATION & PROGRESS ENGINE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Hero header layout ────────────────────────────────────────────────────── */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 2rem 0 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
+}
+.dash-header__left { min-width: 0; }
+
+/* ── Global rank chip ──────────────────────────────────────────────────────── */
+.dash-rank-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  border: 2px solid currentColor;
+  border-radius: 0.75rem;
+  background: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.rank-chip__icon  { font-size: 1.4rem; line-height: 1; }
+.rank-chip__title { display: block; font-size: 1rem; font-weight: 800; line-height: 1.2; }
+.rank-chip__xp    { display: block; font-size: 0.75rem; opacity: 0.7; }
+
+/* ── Quick stats strip ─────────────────────────────────────────────────────── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+}
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  text-align: center;
+}
+.stat-chip--streak { border-color: #fbbf24; background: #fffbeb; }
+
+.stat-chip__value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.1;
+}
+.stat-chip__label {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+/* ── XP progress section ───────────────────────────────────────────────────── */
+.xp-section { margin-bottom: 1.75rem; }
+
+.xp-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.xp-rank-info { display: flex; align-items: baseline; gap: 0.625rem; flex-wrap: wrap; }
+
+.xp-rank-label {
+  font-size: 1rem;
+  font-weight: 800;
+}
+.xp-rank-desc  { font-size: 0.8125rem; color: #64748b; }
+
+.xp-next-label {
+  font-size: 0.8125rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+.xp-next-label--top { color: #16a34a; font-weight: 700; }
+
+.xp-bar-track {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.xp-bar-track--small { height: 6px; }
+
+.xp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+  background: #6366f1;
+}
+.xp-bar-fill--tech { background: #6366f1; }
+
+.xp-label {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+  display: block;
+  text-align: right;
+}
+
+/* ── Adaptive tip banner ───────────────────────────────────────────────────── */
+.adaptive-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #eff6ff, #eef2ff);
+  border: 1.5px solid #c7d2fe;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+}
+.adaptive-tip__icon { font-size: 1.375rem; flex-shrink: 0; margin-top: 2px; }
+.adaptive-tip__text { flex: 1; font-size: 0.9375rem; color: #1e293b; margin: 0; line-height: 1.5; }
+.adaptive-tip__cta  {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: none;
+  white-space: nowrap;
+  align-self: center;
+}
+.adaptive-tip__cta:hover { text-decoration: underline; }
+
+/* ── Per-technology progress cards ────────────────────────────────────────── */
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.progress-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.125rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.progress-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prog-level-badge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+.prog-level-badge--beginner { background: #f1f5f9; color: #64748b; }
+.prog-level-badge--junior   { background: #fef9c3; color: #854d0e; }
+.prog-level-badge--mid      { background: #eef2ff; color: #4338ca; }
+.prog-level-badge--senior   { background: #dcfce7; color: #15803d; }
+
+.progress-card__xp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.progress-card__stats {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.375rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.prog-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.prog-stat strong { font-size: 0.9375rem; color: #1e293b; line-height: 1.2; }
+.prog-stat--active strong { color: #ea580c; }
+
+/* ── Score weakest area ────────────────────────────────────────────────────── */
+.score-weakest {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #b45309;
+  background: #fffbeb;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+/* ── Certificates gallery ──────────────────────────────────────────────────── */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.125rem;
+}
+
+.cert-card {
+  border: 2px solid currentColor;
+  border-radius: 0.875rem;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.cert-card__badge {
+  padding: 0.625rem 1rem;
+  font-weight: 800;
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+}
+
+.cert-card__body {
+  padding: 0.75rem 1rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cert-tech {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: #1e293b;
+}
+
+.cert-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.cert-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cert-code {
+  font-family: monospace;
+  font-size: 0.6875rem;
+  color: #94a3b8;
+}
+
+.cert-verify-link {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: none;
+}
+.cert-verify-link:hover { text-decoration: underline; }
+

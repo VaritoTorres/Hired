@@ -23,23 +23,23 @@ export interface Profile {
   /** Public avatar URL (can be null for new users) */
   avatar_url: string | null;
 
-  /** Free-text bio */
-  bio: string | null;
-
-  /** GitHub profile URL */
-  github_url: string | null;
-
-  /** LinkedIn profile URL */
-  linkedin_url: string | null;
-
   /** FK → plans.id */
   plan_id: string;
 
-  /** ISO-8601 timestamp when the paid plan expires (null for free plan) */
-  plan_expires_at: string | null;
-
   /** ISO-8601 row creation timestamp */
   created_at: string;
+
+  /**
+   * Accumulated XP across all technologies.
+   * Updated by the progress trigger after every completed attempt.
+   */
+  total_xp: number;
+
+  /**
+   * Global rank title derived from total_xp.
+   * Mirrors hired_xp_to_rank_title(): 'Rookie' | 'Explorer' | 'Challenger' | 'Elite'
+   */
+  global_rank_title: string;
 
   /** ISO-8601 last-updated timestamp */
   updated_at: string;
@@ -50,7 +50,7 @@ export interface Profile {
  * All fields are optional — send only the ones being changed.
  */
 export type UpdateProfilePayload = Partial<
-  Pick<Profile, 'full_name' | 'avatar_url' | 'bio' | 'github_url' | 'linkedin_url'>
+  Pick<Profile, 'full_name' | 'avatar_url'>
 >;
 
 /**

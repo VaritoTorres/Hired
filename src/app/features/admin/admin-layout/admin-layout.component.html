@@ -1,0 +1,39 @@
+<!-- Admin Layout Shell -->
+<div class="admin-shell">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar__brand">
+      <span class="admin-sidebar__logo">🛡️</span>
+      <span class="admin-sidebar__title">SuperAdmin</span>
+    </div>
+
+    <nav class="admin-sidebar__nav">
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="item.path"
+        routerLinkActive="admin-nav-item--active"
+        class="admin-nav-item"
+      >
+        <span class="admin-nav-item__icon">{{ item.icon }}</span>
+        <span class="admin-nav-item__label">{{ item.label }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Content area -->
+  <main class="admin-main">
+    <div *ngIf="loading()" class="admin-loading">
+      Verificando acceso…
+    </div>
+
+    <ng-container *ngIf="!loading()">
+      <div *ngIf="!isVerified()" class="admin-access-denied">
+        <p>⛔ Acceso denegado. No tienes permisos de administrador.</p>
+      </div>
+
+      <router-outlet *ngIf="isVerified()" />
+    </ng-container>
+  </main>
+
+</div>

@@ -1,0 +1,253 @@
+<!-- ============================================================
+     SIMULATOR — CONTROLLED EXAM ENVIRONMENT
+     ============================================================ -->
+
+<!-- ── Loading / redirect state ─────────────────────────────── -->
+<ng-container *ngIf="!exam()">
+  <div class="exam-loading">
+    <div class="exam-loading__spinner"></div>
+    <p>Preparando tu simulación…</p>
+  </div>
+</ng-container>
+
+<!-- ── Active exam ───────────────────────────────────────────── -->
+<ng-container *ngIf="exam() as exam">
+
+  <!-- ── Header bar ──────────────────────────────────────────── -->
+  <header class="exam-header" role="banner">
+
+    <div class="exam-header__left">
+      <span class="exam-logo">HIRED</span>
+      <span class="exam-title-text">{{ exam.title }}</span>
+    </div>
+
+    <!-- Timer -->
+    <div class="exam-timer" [ngClass]="timerClass()" role="timer" aria-live="assertive">
+      <span class="timer-icon">⏱</span>
+      <span class="timer-display">{{ timerMinutes() }}:{{ timerSeconds() }}</span>
+      <span class="timer-label" *ngIf="!timerClass().includes('critical')">restante</span>
+      <span class="timer-label timer-label--warn" *ngIf="timerClass().includes('warning')">¡Atencion!</span>
+      <span class="timer-label timer-label--crit" *ngIf="timerClass().includes('critical')">¡Finaliza!</span>
+    </div>
+
+    <!-- Progress-->
+    <div class="exam-header__right">
+      <span class="exam-progress-text">
+        {{ answeredCount() }}/{{ questions().length }} respondidas
+      </span>
+      <div class="exam-progress-bar">
+        <div class="exam-progress-fill" [style.width.%]="completionPercent()"></div>
+      </div>
+      <button class="btn-submit-header"
+              (click)="requestSubmit()"
+              [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Enviando…' : 'Finalizar' }}
+      </button>
+    </div>
+
+  </header>
+
+  <!-- ── Main exam layout ────────────────────────────────────── -->
+  <div class="exam-layout">
+
+    <!-- ── Sidebar: question navigator ────────────────────────── -->
+    <aside class="q-nav" aria-label="Navegador de preguntas">
+      <h3 class="q-nav__title">Preguntas</h3>
+      <div class="q-nav__grid">
+        <button
+          class="q-nav__item"
+          *ngFor="let q of questions(); let i = index"
+          [ngClass]="questionStatusClass(i)"
+          (click)="goToQuestion(i)"
+          [attr.aria-label]="'Pregunta ' + (i + 1) + (isAnswered(q.id) ? ' — respondida' : '')"
+          [attr.aria-current]="currentIndex() === i ? 'true' : null"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <div class="q-nav__legend">
+        <div class="legend-item">
+          <span class="legend-dot legend-dot--answered"></span> Respondida
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-dot--current"></span> Actual
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot"></span> Pendiente
+        </div>
+      </div>
+
+      <div class="q-nav__summary">
+        <div class="summary-bar">
+          <div class="summary-fill" [style.width.%]="completionPercent()"></div>
+        </div>
+        <span class="summary-text">{{ completionPercent() }}% completado</span>
+      </div>
+    </aside>
+
+    <!-- ── Main question panel ─────────────────────────────────── -->
+    <main class="question-panel" role="main" aria-live="polite"
+          *ngIf="currentQuestion() as q">
+
+      <!-- Question metadata -->
+      <div class="question-meta">
+        <span class="q-number">Pregunta {{ currentIndex() + 1 }} de {{ questions().length }}</span>
+        <div class="q-tags">
+          <span class="q-tag q-tag--category">
+            {{ categoryIcon(q.category) }} {{ categoryLabel(q.category) }}
+          </span>
+          <span class="q-tag q-tag--concept">{{ q.concept }}</span>
+          <span class="q-tag q-tag--diff" [attr.aria-label]="'Dificultad ' + q.difficulty">
+            {{ difficultyStars(q.difficulty) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Question body -->
+      <div class="question-body">
+        <p class="question-prompt">{{ q.prompt }}</p>
+      </div>
+
+      <!-- ── Answer area by format ───────────────────────────── -->
+
+      <!-- Multiple choice -->
+      <div class="answer-area" *ngIf="q.format === 'multiple_choice' && q.choices">
+        <p class="answer-label">Selecciona la respuesta correcta:</p>
+        <div class="choices">
+          <label
+            class="choice-item"
+            *ngFor="let choice of q.choices; let ci = index"
+            [class.choice-item--selected]="getAnswer(q.id) === choice"
+          >
+            <input
+              type="radio"
+              [name]="'q_' + q.id"
+              [value]="choice"
+              [checked]="getAnswer(q.id) === choice"
+              (change)="onAnswerChange(q.id, choice)"
+              class="choice-radio"
+            />
+            <span class="choice-letter">{{ ['A','B','C','D','E'][ci] }}</span>
+            <span class="choice-text">{{ choice }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Code editor -->
+      <div class="answer-area" *ngIf="q.format === 'code'">
+        <div class="code-editor-header">
+          <span class="code-lang-badge" *ngIf="q.language">
+            {{ q.language }}
+          </span>
+          <span class="code-hint">Escribe tu solución completa con código funcional</span>
+        </div>
+        <textarea
+          class="code-editor"
+          [value]="getAnswer(q.id)"
+          (input)="onAnswerChange(q.id, $any($event.target).value)"
+          placeholder="// Escribe tu solución aquí...
+// Considera casos borde, eficiencia y legibilidad."
+          rows="16"
+          spellcheck="false"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+        ></textarea>
+        <div class="code-footer">
+          <span class="autosave-indicator">
+            💾 Guardado automático activado
+          </span>
+        </div>
+      </div>
+
+      <!-- Free text / multi-step -->
+      <div class="answer-area"
+           *ngIf="q.format === 'free_text' || q.format === 'multi_step'">
+        <p class="answer-label" *ngIf="q.format === 'multi_step'">
+          Desarrolla tu respuesta paso a paso. Explica el razonamiento y tus decisiones:
+        </p>
+        <p class="answer-label" *ngIf="q.format === 'free_text'">
+          Desarrolla tu respuesta con claridad y precisión técnica:
+        </p>
+        <textarea
+          class="text-editor"
+          [value]="getAnswer(q.id)"
+          (input)="onAnswerChange(q.id, $any($event.target).value)"
+          [placeholder]="q.format === 'multi_step'
+            ? 'Paso 1: ...\nPaso 2: ...\nConsideraciones adicionales: ...'
+            : 'Escribe tu respuesta aquí...'"
+          rows="12"
+        ></textarea>
+        <div class="text-footer">
+          <span class="char-hint">
+            {{ getAnswer(q.id).length }} caracteres
+          </span>
+          <span class="autosave-indicator">💾 Guardado automático</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="question-nav">
+        <button class="btn-qnav btn-qnav--prev"
+                (click)="prevQuestion()"
+                [disabled]="currentIndex() === 0">
+          ← Anterior
+        </button>
+
+        <button class="btn-qnav btn-qnav--next"
+                (click)="nextQuestion()"
+                [disabled]="currentIndex() === questions().length - 1">
+          Siguiente →
+        </button>
+      </div>
+
+    </main>
+
+  </div><!-- /exam-layout -->
+
+  <!-- ── Confirm submission modal ─────────────────────────────── -->
+  <div class="modal-backdrop" *ngIf="showConfirm()" role="dialog"
+       aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal">
+      <h2 class="modal__title" id="confirm-title">¿Finalizar simulación?</h2>
+      <p class="modal__body">
+        Has respondido
+        <strong>{{ answeredCount() }} de {{ questions().length }}</strong> preguntas.
+      </p>
+      <p class="modal__warning" *ngIf="answeredCount() < questions().length">
+        ⚠️ Tienes <strong>{{ questions().length - answeredCount() }}</strong> preguntas sin responder.
+        Puedes continuar revisando antes de enviar.
+      </p>
+      <p class="modal__note">
+        Una vez enviado, no podrás modificar tus respuestas. La IA evaluará tu desempeño.
+      </p>
+      <div class="modal__actions">
+        <button class="btn-modal-cancel" (click)="cancelSubmit()">
+          Revisar respuestas
+        </button>
+        <button class="btn-modal-confirm" (click)="confirmSubmit()">
+          Sí, enviar simulación
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Evaluating overlay ────────────────────────────────────── -->
+  <div class="eval-overlay" *ngIf="isSubmitting()" role="status" aria-live="assertive">
+    <div class="eval-overlay__box">
+      <div class="eval-spinner"></div>
+      <h2 class="eval-title">Evaluando tu examen</h2>
+      <p class="eval-desc">
+        La IA está analizando tus respuestas, calculando scores por concepto
+        y generando tu diagnóstico profesional…
+      </p>
+      <div class="eval-steps">
+        <div class="eval-step eval-step--done">✓ Respuestas procesadas</div>
+        <div class="eval-step eval-step--active">⟳ Evaluando correctitud y calidad…</div>
+        <div class="eval-step">○ Generando diagnóstico</div>
+      </div>
+    </div>
+  </div>
+
+</ng-container>
