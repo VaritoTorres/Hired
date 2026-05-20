@@ -5,7 +5,10 @@
   justify-content: center;
   min-height: 100vh;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(124, 92, 255, 0.10) 0%, transparent 55%),
+    linear-gradient(135deg, #060b18 0%, #0d1526 50%, #060b18 100%);
 }
 
 /* ── Card ──────────────────────────────────────────────────────────────────── */
@@ -170,12 +173,15 @@
 .login-card{
 	width:100%;
 	max-width:560px;
-	background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+	background: linear-gradient(160deg, #1e2d4d 0%, #182340 100%);
 	border-radius:14px;
 	padding:2rem;
-	box-shadow: 0 30px 60px rgba(2,6,23,0.6);
+	box-shadow:
+		0 30px 60px rgba(2,6,23,0.7),
+		0 0 0 1px rgba(99, 102, 241, 0.35),
+		0 0 40px rgba(99, 102, 241, 0.10);
 	color:#e6eef8;
-	border: 1px solid rgba(255,255,255,0.04);
+	border: 1px solid rgba(99, 102, 241, 0.35);
 }
 
 .login-header{display:flex;flex-direction:column;gap:0.25rem;margin-bottom:1rem}

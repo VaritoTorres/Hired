@@ -58,31 +58,39 @@ export class AuthService {
   }
 
   /**
-   * Sign in with email and password.
+   * Sign in with email and password (local validation, no network call).
+   * Validates against hardcoded credentials: admin@local.test / Password123!
    * Navigates to /dashboard on success.
-   * @throws {AuthError} on failure.
+   * @throws {Error} on invalid credentials.
    */
   async login(email: string, password: string): Promise<void> {
-    const { error } = await this.supabase.client.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Local credential validation — no Supabase call
+    const LOCAL_EMAIL = 'admin@local.test';
+    const LOCAL_PASSWORD = 'Password123!';
 
-    if (error) throw this.normalizeError(error);
+    if (email !== LOCAL_EMAIL || password !== LOCAL_PASSWORD) {
+      throw new Error('Credenciales inválidas');
+    }
 
+    // Create a mock AppUser and emit it
+    const mockUser: AppUser = {
+      id: 'local-user-1',
+      email: LOCAL_EMAIL,
+      fullName: 'Admin Local',
+      avatarUrl: '',
+      role: UserRole.CANDIDATE,
+      createdAt: new Date().toISOString(),
+    };
+
+    this._currentUser$.next(mockUser);
     await this.router.navigate(['/dashboard']);
   }
 
   /**
    * Sign out the current session and redirect to the login page.
+   * In local mode, simply clears the current user and navigates.
    */
   async logout(): Promise<void> {
-    const { error } = await this.supabase.client.auth.signOut();
-
-    if (error) {
-      console.error('[AuthService] logout error:', error.message);
-    }
-
     this._currentUser$.next(null);
     await this.router.navigate(['/auth/login']);
   }

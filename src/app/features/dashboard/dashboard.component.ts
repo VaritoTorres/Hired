@@ -26,13 +26,9 @@ import {
 } from 'rxjs/operators';
 
 import { AuthService }                 from '../../core/services/auth.service';
-import { ProfileService }              from '../../core/services/profile.service';
-import { SimulationService }           from '../../core/services/simulation.service';
 import { ScoreService, BreakdownAverages } from '../../core/services/score.service';
-import { ProgressService }             from '../../core/services/progress.service';
-import { CertificateService }          from '../../core/services/certificate.service';
 
-import { AppUser }                      from '../../core/models/user.model';
+import { AppUser, UserRole }            from '../../core/models/user.model';
 import { ProfileWithPlan }              from '../../shared/models/profile.model';
 import { AttemptWithSimulation, AttemptScorePoint } from '../../shared/models/simulation-attempt.model';
 import {
@@ -85,12 +81,7 @@ export interface DashboardVM {
 export class DashboardComponent implements OnInit, OnDestroy {
   // ─── Dependencies ─────────────────────────────────────────────────────────
 
-  private readonly auth            = inject(AuthService);
-  private readonly profileService  = inject(ProfileService);
-  private readonly simulationSvc   = inject(SimulationService);
-  private readonly scoreSvc        = inject(ScoreService);
-  private readonly progressSvc     = inject(ProgressService);
-  private readonly certSvc         = inject(CertificateService);
+  private readonly auth = inject(AuthService);
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -110,21 +101,152 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ─── Initialisation ───────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    // Mock data for local development — no Supabase calls
+    const mockUser: AppUser = {
+      id: 'local-user-1',
+      email: 'admin@local.test',
+      fullName: 'Admin Local',
+      avatarUrl: '',
+      role: UserRole.CANDIDATE,
+      createdAt: new Date().toISOString(),
+    };
+
+    const mockProfile: ProfileWithPlan = {
+      id: 'local-user-1',
+      full_name: 'Admin Local',
+      avatar_url: null,
+      plan_id: 'free-plan',
+      created_at: new Date().toISOString(),
+      total_xp: 3500,
+      global_rank_title: 'Challenger',
+      updated_at: new Date().toISOString(),
+      plan: {
+        id: 'free-plan',
+        slug: 'free' as const,
+        name: 'Free Plan',
+        price_monthly: 0,
+        price_yearly: 0,
+        max_simulations_per_month: 5,
+        features: [],
+        is_featured: false,
+        created_at: new Date().toISOString(),
+      },
+    };
+
+    const mockRecentAttempts: AttemptWithSimulation[] = [
+      {
+        id: 'attempt-1',
+        user_id: 'local-user-1',
+        simulation_id: 'sim-1',
+        score: 78,
+        breakdown: { concepts: 80, problem_solving: 75, clean_code: 82, performance: 70 },
+        weighted_score: 78.5,
+        status: 'completed',
+        answers: [],
+        started_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        technology_id: 'tech-1',
+        simulation_title: 'TypeScript Generics Challenge',
+      } as any,
+      {
+        id: 'attempt-2',
+        user_id: 'local-user-1',
+        simulation_id: 'sim-2',
+        score: 85,
+        breakdown: { concepts: 88, problem_solving: 87, clean_code: 82, performance: 83 },
+        weighted_score: 85.0,
+        status: 'completed',
+        answers: [],
+        started_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        technology_id: 'tech-2',
+        simulation_title: 'React Hooks Deep Dive',
+      } as any,
+    ];
+
+    const mockTechnicalScores: TechnicalScoreWithTechnology[] = [
+      {
+        id: 'score-1',
+        user_id: 'local-user-1',
+        technology_id: 'tech-1',
+        average_score: 78.5,
+        attempt_count: 5,
+        level_estimated: 'junior' as LevelEstimate,
+        weakest_area: 'performance',
+        updated_at: new Date().toISOString(),
+        technology: { id: 'tech-1', name: 'TypeScript', slug: 'typescript', color: '#3178c6' } as any,
+      } as any,
+      {
+        id: 'score-2',
+        user_id: 'local-user-1',
+        technology_id: 'tech-2',
+        average_score: 82.0,
+        attempt_count: 3,
+        level_estimated: 'mid' as LevelEstimate,
+        weakest_area: 'concepts',
+        updated_at: new Date().toISOString(),
+        technology: { id: 'tech-2', name: 'React', slug: 'react', color: '#61dafb' } as any,
+      } as any,
+    ];
+
+    const mockScoreEvolution: AttemptScorePoint[] = [
+      { completed_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), weighted_score: 70.0, title: 'TypeScript Basics', level: 'beginner' },
+      { completed_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), weighted_score: 72.5, title: 'TypeScript Advanced', level: 'junior' },
+      { completed_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), weighted_score: 75.0, title: 'React Hooks', level: 'junior' },
+      { completed_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), weighted_score: 78.5, title: 'React Performance', level: 'mid' },
+    ];
+
+    const mockBreakdownAverages: BreakdownAverages = {
+      concepts: 81,
+      problem_solving: 79,
+      clean_code: 77,
+      performance: 72,
+    };
+
+    const mockUserProgress: UserProgressWithTechnology[] = [
+      {
+        id: 'progress-1',
+        user_id: 'local-user-1',
+        technology_id: 'tech-1',
+        total_xp: 1500,
+        streak_days: 7,
+        best_score: 92,
+        updated_at: new Date().toISOString(),
+        technology: { id: 'tech-1', name: 'TypeScript', slug: 'typescript', color: '#3178c6' } as any,
+      } as any,
+      {
+        id: 'progress-2',
+        user_id: 'local-user-1',
+        technology_id: 'tech-2',
+        total_xp: 2000,
+        streak_days: 5,
+        best_score: 95,
+        updated_at: new Date().toISOString(),
+        technology: { id: 'tech-2', name: 'React', slug: 'react', color: '#61dafb' } as any,
+      } as any,
+    ];
+
+    const mockCertificates: CertificateWithTechnology[] = [
+      {
+        id: 'cert-1',
+        user_id: 'local-user-1',
+        technology_id: 'tech-1',
+        issued_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000).toISOString(),
+        technology: { id: 'tech-1', name: 'TypeScript', slug: 'typescript', color: '#3178c6' } as any,
+      } as any,
+    ];
+
     (this as { vm$: Observable<DashboardVM> }).vm$ = combineLatest([
-      this.auth.getCurrentUser(),
-      this.profileService.getUserPlan(),
-      this.simulationSvc.countUserAttemptsThisMonth(),
-      this.simulationSvc.getUserAttempts().pipe(
-        map((a) => a.slice(0, 5)),
-        catchError(() => of([] as AttemptWithSimulation[]))
-      ),
-      this.scoreSvc.getTechnicalScores().pipe(catchError(() => of([]))),
-      this.scoreSvc.getScoreEvolution(20).pipe(catchError(() => of([]))),
-      this.scoreSvc.getBreakdownAverages().pipe(
-        catchError(() => of({ concepts: 0, problem_solving: 0, clean_code: 0, performance: 0 }))
-      ),
-      this.progressSvc.getUserProgress().pipe(catchError(() => of([]))),
-      this.certSvc.getUserCertificates().pipe(catchError(() => of([]))),
+      of(mockUser),
+      of(mockProfile),
+      of(2), // attemptsThisMonth
+      of(mockRecentAttempts),
+      of(mockTechnicalScores),
+      of(mockScoreEvolution),
+      of(mockBreakdownAverages),
+      of(mockUserProgress),
+      of(mockCertificates),
     ]).pipe(
       map(([
         user, profile, attemptsThisMonth,
@@ -145,9 +267,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const currentStreak = (userProgress as UserProgressWithTechnology[])
           .reduce((max, row) => Math.max(max, row.streak_days), 0);
 
-        const adaptiveTip = this.progressSvc.generateAdaptiveTip(
-          technicalScores as TechnicalScoreWithTechnology[]
-        );
+        const adaptiveTip = 'Mejora tu performance en TypeScript — estás en un buen camino.';
 
         const totalXp = (profile as ProfileWithPlan).total_xp ?? 0;
 

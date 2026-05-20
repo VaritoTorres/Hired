@@ -10,7 +10,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule }     from '@angular/common';
 import { RouterModule }     from '@angular/router';
-import { PlansService }     from '../../core/services/plans.service';
 import { ToastService }     from '../../core/services/toast.service';
 import {
   SubscriptionPlan,
@@ -29,7 +28,6 @@ import {
   styleUrl:    './plans.component.css',
 })
 export class PlansComponent implements OnInit {
-  private readonly plansSvc = inject(PlansService);
   private readonly toastSvc = inject(ToastService);
 
   // -- Signals ----------------------------------------------------------------
@@ -41,12 +39,14 @@ export class PlansComponent implements OnInit {
   // -- Derived ----------------------------------------------------------------
   readonly usagePct = computed(() => {
     const sub = this.activeSub();
-    return sub ? this.plansSvc.getSimulationUsagePct(sub) : 0;
+    if (!sub || !sub.simulations_per_month) return 0;
+    return Math.min(100, Math.round((sub.simulations_used_this_month / sub.simulations_per_month) * 100));
   });
 
   readonly remaining = computed(() => {
     const sub = this.activeSub();
-    return sub ? this.plansSvc.getRemainingSimulations(sub) : null;
+    if (!sub || !sub.simulations_per_month) return null;
+    return Math.max(0, sub.simulations_per_month - sub.simulations_used_this_month);
   });
 
   // -- Expose constants for template ------------------------------------------
@@ -62,15 +62,91 @@ export class PlansComponent implements OnInit {
 
   // -- Lifecycle --------------------------------------------------------------
   ngOnInit(): void {
-    this.plansSvc.getAllPlans().subscribe({
-      next:  (data) => { this.plans.set(data); this.loadingPlans.set(false); },
-      error: ()     => this.loadingPlans.set(false),
-    });
+    // Mock data for local development — no Supabase calls
+    const mockPlans: SubscriptionPlan[] = [
+      {
+        id: 'free-plan-1',
+        slug: 'free',
+        name: 'Gratuito',
+        description: 'Perfecto para comenzar',
+        monthly_price: 0,
+        simulations_per_month: 3,
+        max_technologies: null,
+        certification_access: false,
+        adaptive_ai_access: false,
+        public_profile_access: false,
+        pdf_reports_access: false,
+        extended_feedback_access: false,
+        is_featured: false,
+        badge_label: null,
+        sort_order: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'student-plan-1',
+        slug: 'pro',
+        name: 'Estudiante',
+        description: 'Para estudiantes verificados',
+        monthly_price: 0,
+        simulations_per_month: 20,
+        max_technologies: null,
+        certification_access: true,
+        adaptive_ai_access: true,
+        public_profile_access: false,
+        pdf_reports_access: true,
+        extended_feedback_access: true,
+        is_featured: false,
+        badge_label: 'Verificación requerida',
+        sort_order: 2,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'premium-plan-1',
+        slug: 'elite',
+        name: 'Premium',
+        description: 'Acceso completo',
+        monthly_price: 300,
+        simulations_per_month: null, // unlimited
+        max_technologies: null, // unlimited
+        certification_access: true,
+        adaptive_ai_access: true,
+        public_profile_access: true,
+        pdf_reports_access: true,
+        extended_feedback_access: true,
+        is_featured: true,
+        badge_label: 'Recomendado',
+        sort_order: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
 
-    this.plansSvc.getActiveSubscription().subscribe({
-      next:  (sub) => { this.activeSub.set(sub); this.loadingSub.set(false); },
-      error: ()    => this.loadingSub.set(false),
-    });
+    const mockActiveSub: ActiveSubscription = {
+      subscription_id: 'sub-1',
+      plan_id: 'free-plan-1',
+      plan_slug: 'free',
+      plan_name: 'Gratuito',
+      monthly_price: 0,
+      simulations_per_month: 3,
+      simulations_used_this_month: 1,
+      max_technologies: null,
+      certification_access: false,
+      adaptive_ai_access: false,
+      public_profile_access: false,
+      pdf_reports_access: false,
+      extended_feedback_access: false,
+      status: 'active',
+      started_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: null,
+    };
+
+    this.plans.set(mockPlans);
+    this.loadingPlans.set(false);
+
+    this.activeSub.set(mockActiveSub);
+    this.loadingSub.set(false);
   }
 
   // -- Template helpers -------------------------------------------------------
@@ -97,19 +173,26 @@ export class PlansComponent implements OnInit {
   }
 
   requestUpgrade(plan: SubscriptionPlan): void {
-    if (plan.slug === 'elite') {
-      this.toastSvc.info('Proximamente', 'El plan Elite estara disponible pronto. Contacta soporte para mas informacion.');
+    if (plan.slug === 'pro') {
+      this.toastSvc.info('Verificación de estudiante', 'Por favor verifica tu email institucional (.edu) para acceder al plan Estudiante.');
       return;
     }
-    this.toastSvc.info('Actualizar plan', `Para activar ${plan.name}, contacta soporte o espera la integracion de pagos.`);
+    if (plan.slug === 'elite') {
+      this.toastSvc.info('Plan Premium', 'El pago de $300 MXN estará disponible pronto. Contacta soporte para más información.');
+      return;
+    }
+    this.toastSvc.info('Actualizar plan', `Ya tienes acceso a ${plan.name}.`);
   }
 
   getCtaLabel(plan: SubscriptionPlan): string {
     if (this.isCurrentPlan(plan.slug)) return 'Plan actual';
-    return PLAN_DISPLAY_META[plan.slug].ctaLabel;
+    if (plan.slug === 'pro') return 'Verificar como estudiante';
+    if (plan.slug === 'elite') return 'Suscribirse ($300 MXN/mes)';
+    return 'Seleccionar plan';
   }
 
   isCtaDisabled(plan: SubscriptionPlan): boolean {
-    return this.isCurrentPlan(plan.slug) || PLAN_DISPLAY_META[plan.slug].comingSoon;
+    // Only disable the CTA for the current plan
+    return this.isCurrentPlan(plan.slug);
   }
 }
